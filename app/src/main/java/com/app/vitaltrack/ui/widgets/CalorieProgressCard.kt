@@ -33,7 +33,7 @@ fun CalorieProgressCard(
             .clip(RoundedCornerShape(20.dp))
             .background(CardBackground)
             .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
-            .padding(20.dp)
+            .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -61,9 +61,19 @@ fun CalorieProgressCard(
                     fontSize = 16.sp,
                     modifier = Modifier.padding(bottom = 6.dp, start = 4.dp)
                 )
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                Text(
+                    text = "$percentage%",
+                    color = if (isOverGoal) Color.Red else TextSecondary,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             
             LinearProgressIndicator(
                 progress = { progress },
@@ -75,15 +85,9 @@ fun CalorieProgressCard(
                 trackColor = Color.White.copy(alpha = 0.1f)
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            //Spacer(modifier = Modifier.height(8.dp))
             
-            Text(
-                text = "$percentage% consumido",
-                color = if (isOverGoal) Color.Red else TextSecondary,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.End)
-            )
+
         }
     }
 }

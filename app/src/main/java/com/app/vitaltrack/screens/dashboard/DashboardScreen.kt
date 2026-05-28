@@ -27,6 +27,7 @@ import com.app.vitaltrack.ui.widgets.*
 
 @Composable
 fun DashboardScreen(
+    onNavigateToConfig: () -> Unit,
     viewModel: DashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -49,7 +50,10 @@ fun DashboardScreen(
             bottomBar = {
                 VitalTrackBottomNavigation(
                     selectedItem = selectedTab,
-                    onItemClick = { selectedTab = it }
+                    onItemClick = { 
+                        selectedTab = it 
+                        if (it == 3) onNavigateToConfig()
+                    }
                 )
             }
         ) { innerPadding ->
