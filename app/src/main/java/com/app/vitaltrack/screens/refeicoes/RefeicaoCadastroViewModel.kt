@@ -5,18 +5,23 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
 import com.app.vitaltrack.data.dao.MostUsedFood
+import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.database.AppDatabase
+import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.repository.MealRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 data class RefeicaoCadastroUiState(
     val date: String = "",
     val typeId: Int = 0,
-    val currentItems: List<RefeicaoItemEntity> = emptyList(),
+    val mealName: String = "",
+    val mealEmoji: String = "",
+    val currentItems: List<RefeicaoItemComDescricao> = emptyList(),
     val mostUsed: List<MostUsedFood> = emptyList(),
     val favorites: List<RefeicaoFavoritaEntity> = emptyList(),
     val availableFoods: List<AlimentoDisponivel> = emptyList(),
@@ -25,7 +30,7 @@ data class RefeicaoCadastroUiState(
     val errorMessage: String? = null
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: MealRepository
     private val _uiState = MutableStateFlow(RefeicaoCadastroUiState())
@@ -57,7 +62,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
     }
 
     fun init(date: String, typeId: Int) {
-        _uiState.update { it.copy(date = date, typeId = typeId) }
+        val meal = Meal.defaultMeals.find { it.id.toInt() == typeId }
+        val mealName = meal?.name ?: "Adicionar Alimentos"
+        val mealEmoji = meal?.emoji ?: ""
+        _uiState.update { it.copy(date = date, typeId = typeId, mealName = mealName, mealEmoji = mealEmoji) }
         
         repository.getItemsForMeal(date, typeId).onEach { items ->
             _uiState.update { it.copy(currentItems = items) }
@@ -98,7 +106,17 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
 
     fun saveAsFavorite(name: String) {
         viewModelScope.launch {
-            repository.saveMealAsFavorite(name, _uiState.value.typeId, _uiState.value.currentItems)
+            val itemsToSave = _uiState.value.currentItems.map {
+                RefeicaoItemEntity(
+                    dtConsumo = it.dtConsumo,
+                    cdAlimento = it.cdAlimento,
+                    cdCliente = it.cdCliente,
+                    cdFase = it.cdFase,
+                    cdRefeicaoTp = it.cdRefeicaoTp,
+                    nmQnt = it.nmQnt
+                )
+            }
+            repository.saveMealAsFavorite(name, _uiState.value.typeId, itemsToSave)
             _uiState.update { it.copy(successMessage = "Refeição favorita salva.") }
         }
     }

@@ -4,10 +4,10 @@ import androidx.lifecycle.ViewModel
 import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.model.RecommendedFeature
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material.icons.filled.DirectionsRun
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,18 +18,11 @@ import java.util.*
 
 data class DashboardUiState(
     val date: LocalDate = LocalDate.now(),
-    val meals: List<Meal> = listOf(
-        Meal(1, "Café da manhã", "🍳"),
-        Meal(2, "Lanche", "🍎"),
-        Meal(3, "Almoço", "🍲"),
-        Meal(4, "Lanche da tarde", "🥪"),
-        Meal(5, "Jantar", "🥗"),
-        Meal(6, "Ceia", "🥛")
-    ),
+    val meals: List<Meal> = Meal.defaultMeals,
     val recommendedFeatures: List<RecommendedFeature> = listOf(
         RecommendedFeature("Lembrete de hidratação", Icons.Default.WaterDrop),
-        RecommendedFeature("Contador de passos", Icons.Default.DirectionsRun),
-        RecommendedFeature("Relatório semanal", Icons.Default.ShowChart),
+        RecommendedFeature("Contador de passos", Icons.AutoMirrored.Filled.DirectionsRun),
+        RecommendedFeature("Relatório semanal", Icons.AutoMirrored.Filled.ShowChart),
         RecommendedFeature("Alertas de meta", Icons.Default.Notifications)
     ),
     val calorieGoal: Double = 2000.0
@@ -39,7 +32,7 @@ class DashboardViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    private val dateFormatter = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR"))
+    private val dateFormatter = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale.forLanguageTag("pt-BR"))
     private val dbDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     fun getFormattedDate(): String {

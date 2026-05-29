@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
+import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.AlimentoEntity
 import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
@@ -69,7 +71,7 @@ fun RefeicaoCadastroScreen(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                HeaderSection(onBackClick)
+                HeaderSection("${uiState.mealEmoji} ${uiState.mealName}", onBackClick)
             }
         ) { innerPadding ->
             LazyColumn(
@@ -82,7 +84,7 @@ fun RefeicaoCadastroScreen(
             ) {
                 // 1. Alimentos já adicionados
                 if (uiState.currentItems.isNotEmpty()) {
-                    item { SectionTitle("Itens da refeição") }
+                   // item { SectionTitle("Itens da refeição") }
                     items(uiState.currentItems) { item ->
                         CurrentItemCard(item, onDelete = { viewModel.deleteItem(item.cdAlimento) })
                     }
@@ -236,7 +238,7 @@ fun RefeicaoCadastroScreen(
 }
 
 @Composable
-fun HeaderSection(onBackClick: () -> Unit) {
+fun HeaderSection(title: String, onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -248,12 +250,12 @@ fun HeaderSection(onBackClick: () -> Unit) {
             onClick = onBackClick,
             modifier = Modifier.size(40.dp).clip(CircleShape).background(CardBackground)
         ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = null, tint = TextPrimary)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = TextPrimary)
         }
         Spacer(Modifier.width(16.dp))
         Column {
-            Text("Adicionar Alimentos", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-            Text("Personalize sua refeição", color = TextSecondary, fontSize = 12.sp)
+            Text(title, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Adicionar Alimentos", color = TextSecondary, fontSize = 12.sp)
         }
     }
 }
@@ -275,7 +277,7 @@ fun EmptyMessage(message: String) {
 }
 
 @Composable
-fun CurrentItemCard(item: RefeicaoItemEntity, onDelete: () -> Unit) {
+fun CurrentItemCard(item: RefeicaoItemComDescricao, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardBackground),
@@ -287,11 +289,20 @@ fun CurrentItemCard(item: RefeicaoItemEntity, onDelete: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
-                Text("Alimento ID: ${item.cdAlimento}", color = TextPrimary, fontWeight = FontWeight.Medium)
-                Text("${item.nmQnt} g/ml", color = TextSecondary, fontSize = 12.sp)
+                Text(
+                    text = item.dsAlimento ?: "Alimento desconhecido",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Text(
+                    text = "${item.nmQnt?.toInt() ?: 0} ${item.dsUnidade ?: ""}",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.Red.copy(alpha = 0.7f))
+                Icon(Icons.Default.Delete, contentDescription = null, tint = TealLight)
             }
         }
     }

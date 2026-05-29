@@ -55,8 +55,22 @@ interface MealDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertMealItems(items: List<RefeicaoItemEntity>): LongArray
 
-    @Query("SELECT * FROM tb_DT_refeicoes_itens WHERE DT_CONSUMO = :date AND CD_REFEICAO_TP = :refeicaoTipoId")
-    fun getItemsForMeal(date: String, refeicaoTipoId: Int): Flow<List<RefeicaoItemEntity>>
+    @Query("""
+        SELECT 
+            r.DT_CONSUMO,
+            r.CD_ALIMENTO,
+            a.DS_ALIMENTO,
+            r.CD_CLIENTE,
+            r.CD_FASE,
+            r.CD_REFEICAO_TP,
+            r.NM_QNT,
+            u.DS_UNIDADE
+        FROM tb_DT_refeicoes_itens r
+        INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = r.CD_ALIMENTO
+        LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
+        WHERE r.DT_CONSUMO = :date AND r.CD_REFEICAO_TP = :refeicaoTipoId
+    """)
+    fun getItemsForMeal(date: String, refeicaoTipoId: Int): Flow<List<RefeicaoItemComDescricao>>
 
     @Query("SELECT * FROM tb_DT_refeicoes_itens WHERE DT_CONSUMO = :date AND CD_REFEICAO_TP = :refeicaoTipoId AND CD_ALIMENTO = :alimentoId AND CD_CLIENTE = :clienteId LIMIT 1")
     fun getSpecificMealItemSync(date: String, refeicaoTipoId: Int, alimentoId: Long, clienteId: Long): RefeicaoItemEntity?
@@ -121,4 +135,15 @@ data class AlimentoDisponivel(
     @ColumnInfo(name = "NM_PROT") val nmProt: Double?,
     @ColumnInfo(name = "NM_CARB") val nmCarb: Double?,
     @ColumnInfo(name = "NM_GORD") val nmGord: Double?
+)
+
+data class RefeicaoItemComDescricao(
+    @ColumnInfo(name = "DT_CONSUMO") val dtConsumo: String,
+    @ColumnInfo(name = "CD_ALIMENTO") val cdAlimento: Long,
+    @ColumnInfo(name = "DS_ALIMENTO") val dsAlimento: String?,
+    @ColumnInfo(name = "CD_CLIENTE") val cdCliente: Long,
+    @ColumnInfo(name = "CD_FASE") val cdFase: Int?,
+    @ColumnInfo(name = "CD_REFEICAO_TP") val cdRefeicaoTp: Int,
+    @ColumnInfo(name = "NM_QNT") val nmQnt: Double?,
+    @ColumnInfo(name = "DS_UNIDADE") val dsUnidade: String?
 )

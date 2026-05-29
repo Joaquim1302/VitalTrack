@@ -2,6 +2,7 @@ package com.app.vitaltrack.repository
 
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
 import com.app.vitaltrack.data.dao.MealDao
+import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
