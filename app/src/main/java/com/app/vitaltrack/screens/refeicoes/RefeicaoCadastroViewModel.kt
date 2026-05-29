@@ -1,0 +1,127 @@
+package com.app.vitaltrack.screens.refeicoes
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.app.vitaltrack.data.dao.AlimentoDisponivel
+import com.app.vitaltrack.data.dao.MostUsedFood
+import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
+import com.app.vitaltrack.data.entity.RefeicaoItemEntity
+import com.app.vitaltrack.database.AppDatabase
+import com.app.vitaltrack.repository.MealRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+
+data class RefeicaoCadastroUiState(
+    val date: String = "",
+    val typeId: Int = 0,
+    val currentItems: List<RefeicaoItemEntity> = emptyList(),
+    val mostUsed: List<MostUsedFood> = emptyList(),
+    val favorites: List<RefeicaoFavoritaEntity> = emptyList(),
+    val availableFoods: List<AlimentoDisponivel> = emptyList(),
+    val isLoading: Boolean = false,
+    val successMessage: String? = null,
+    val errorMessage: String? = null
+)
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository: MealRepository
+    private val _uiState = MutableStateFlow(RefeicaoCadastroUiState())
+    val uiState: StateFlow<RefeicaoCadastroUiState> = _uiState.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+
+    init {
+        val db = AppDatabase.getDatabase(application)
+        repository = MealRepository(db.mealDao())
+        
+        repository.getMostUsedFoods().onEach { list ->
+            _uiState.update { it.copy(mostUsed = list) }
+        }.launchIn(viewModelScope)
+
+        _searchQuery
+            .debounce(300)
+            .flatMapLatest { query ->
+                if (query.isBlank()) {
+                    repository.getAlimentosDisponiveis()
+                } else {
+                    repository.searchAlimentosDisponiveis(query)
+                }
+            }
+            .onEach { list ->
+                _uiState.update { it.copy(availableFoods = list) }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun init(date: String, typeId: Int) {
+        _uiState.update { it.copy(date = date, typeId = typeId) }
+        
+        repository.getItemsForMeal(date, typeId).onEach { items ->
+            _uiState.update { it.copy(currentItems = items) }
+        }.launchIn(viewModelScope)
+
+        repository.getFavorites(typeId).onEach { list ->
+            _uiState.update { it.copy(favorites = list) }
+        }.launchIn(viewModelScope)
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun addItem(alimentoId: Long, quantity: Double) {
+        if (quantity <= 0) {
+            _uiState.update { it.copy(errorMessage = "A quantidade deve ser maior que zero.") }
+            return
+        }
+
+        viewModelScope.launch {
+            repository.addFoodToMeal(
+                _uiState.value.date,
+                1, // Mock clienteId
+                _uiState.value.typeId,
+                alimentoId,
+                quantity
+            )
+            _uiState.update { it.copy(successMessage = "Alimento adicionado à refeição.") }
+        }
+    }
+
+    fun deleteItem(alimentoId: Long) {
+        viewModelScope.launch {
+            repository.deleteItem(_uiState.value.date, _uiState.value.typeId, alimentoId)
+        }
+    }
+
+    fun saveAsFavorite(name: String) {
+        viewModelScope.launch {
+            repository.saveMealAsFavorite(name, _uiState.value.typeId, _uiState.value.currentItems)
+            _uiState.update { it.copy(successMessage = "Refeição favorita salva.") }
+        }
+    }
+
+    fun importFavorite(favoritaId: Long) {
+        viewModelScope.launch {
+            repository.importFavorite(favoritaId, _uiState.value.date, 1, _uiState.value.typeId)
+            _uiState.update { it.copy(successMessage = "Refeição favorita importada.") }
+        }
+    }
+
+    fun copyPreviousMeal() {
+        viewModelScope.launch {
+            val success = repository.copyPreviousMeal(1, _uiState.value.typeId, _uiState.value.date)
+            if (success) {
+                _uiState.update { it.copy(successMessage = "Refeição anterior copiada.") }
+            } else {
+                _uiState.update { it.copy(errorMessage = "Nenhuma refeição anterior encontrada.") }
+            }
+        }
+    }
+
+    fun clearMessages() {
+        _uiState.update { it.copy(successMessage = null, errorMessage = null) }
+    }
+}

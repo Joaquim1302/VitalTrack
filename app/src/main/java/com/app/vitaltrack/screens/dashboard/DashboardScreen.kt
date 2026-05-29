@@ -28,6 +28,7 @@ import com.app.vitaltrack.ui.widgets.*
 @Composable
 fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
+    onNavigateToMealRegistration: (String, Int) -> Unit,
     viewModel: DashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -94,7 +95,7 @@ fun DashboardScreen(
                         emoji = meal.emoji,
                         name = meal.name,
                         calories = meal.calories,
-                        onAddClick = { viewModel.addCaloriesToMeal(meal.id) }
+                        onAddClick = { onNavigateToMealRegistration(viewModel.getDbDate(), meal.id.toInt()) }
                     )
                 }
 

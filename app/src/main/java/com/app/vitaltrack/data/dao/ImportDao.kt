@@ -11,14 +11,14 @@ import com.app.vitaltrack.data.entity.UnidadeEntity
 @Dao
 interface ImportDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAlimentos(alimentos: List<AlimentoEntity>)
+    fun insertAlimentos(alimentos: List<AlimentoEntity>): LongArray
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertRefeicoesTipos(tipos: List<RefeicaoTipoEntity>)
+    fun insertRefeicoesTipos(tipos: List<RefeicaoTipoEntity>): LongArray
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertRefeicoesItens(itens: List<RefeicaoItemEntity>)
+    fun insertRefeicoesItens(itens: List<RefeicaoItemEntity>): LongArray
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertUnidades(unidades: List<UnidadeEntity>)
+    fun insertUnidades(unidades: List<UnidadeEntity>): LongArray
 }

@@ -40,9 +40,14 @@ class DashboardViewModel : ViewModel() {
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
     private val dateFormatter = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale("pt", "BR"))
+    private val dbDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
     fun getFormattedDate(): String {
         return _uiState.value.date.format(dateFormatter)
+    }
+    
+    fun getDbDate(): String {
+        return _uiState.value.date.format(dbDateFormatter)
     }
 
     fun nextDay() {

@@ -5,23 +5,24 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.app.vitaltrack.data.dao.ImportDao
-import com.app.vitaltrack.data.entity.AlimentoEntity
-import com.app.vitaltrack.data.entity.RefeicaoItemEntity
-import com.app.vitaltrack.data.entity.RefeicaoTipoEntity
-import com.app.vitaltrack.data.entity.UnidadeEntity
+import com.app.vitaltrack.data.dao.MealDao
+import com.app.vitaltrack.data.entity.*
 
 @Database(
     entities = [
         AlimentoEntity::class,
         RefeicaoTipoEntity::class,
         RefeicaoItemEntity::class,
-        UnidadeEntity::class
+        UnidadeEntity::class,
+        RefeicaoFavoritaEntity::class,
+        RefeicaoFavoritaItemEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun importDao(): ImportDao
+    abstract fun mealDao(): MealDao
 
     companion object {
         @Volatile
@@ -33,7 +34,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "vitaltrack_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
