@@ -3,10 +3,6 @@ package com.app.vitaltrack.screens.refeicoes
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.app.vitaltrack.data.dao.AlimentoDisponivel
-import com.app.vitaltrack.data.dao.MostUsedFood
-import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
-import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.model.Meal
@@ -15,20 +11,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-
-data class RefeicaoCadastroUiState(
-    val date: String = "",
-    val typeId: Int = 0,
-    val mealName: String = "",
-    val mealEmoji: String = "",
-    val currentItems: List<RefeicaoItemComDescricao> = emptyList(),
-    val mostUsed: List<MostUsedFood> = emptyList(),
-    val favorites: List<RefeicaoFavoritaEntity> = emptyList(),
-    val availableFoods: List<AlimentoDisponivel> = emptyList(),
-    val isLoading: Boolean = false,
-    val successMessage: String? = null,
-    val errorMessage: String? = null
-)
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
@@ -43,7 +25,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         repository = MealRepository(db.mealDao())
         
         repository.getMostUsedFoods().onEach { list ->
-            _uiState.update { it.copy(mostUsed = list) }
+            _uiState.update { it.copy(maisConsumidos = list) }
         }.launchIn(viewModelScope)
 
         _searchQuery
@@ -56,7 +38,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 }
             }
             .onEach { list ->
-                _uiState.update { it.copy(availableFoods = list) }
+                _uiState.update { it.copy(alimentosDisponiveis = list) }
             }
             .launchIn(viewModelScope)
     }
@@ -68,12 +50,18 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _uiState.update { it.copy(date = date, typeId = typeId, mealName = mealName, mealEmoji = mealEmoji) }
         
         repository.getItemsForMeal(date, typeId).onEach { items ->
-            _uiState.update { it.copy(currentItems = items) }
+            _uiState.update { it.copy(alimentosSelecionados = items) }
         }.launchIn(viewModelScope)
 
         repository.getFavorites(typeId).onEach { list ->
-            _uiState.update { it.copy(favorites = list) }
+            _uiState.update { it.copy(refeicoesSalvas = list) }
         }.launchIn(viewModelScope)
+    }
+
+    fun selecionarAba(aba: AbaAdicionarAlimento) {
+        _uiState.update {
+            it.copy(abaSelecionada = aba)
+        }
     }
 
     fun onSearchQueryChange(query: String) {
@@ -106,7 +94,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
 
     fun saveAsFavorite(name: String) {
         viewModelScope.launch {
-            val itemsToSave = _uiState.value.currentItems.map {
+            val itemsToSave = _uiState.value.alimentosSelecionados.map {
                 RefeicaoItemEntity(
                     dtConsumo = it.dtConsumo,
                     cdAlimento = it.cdAlimento,

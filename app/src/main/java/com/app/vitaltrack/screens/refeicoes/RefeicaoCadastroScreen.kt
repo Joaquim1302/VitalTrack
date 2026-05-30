@@ -84,9 +84,22 @@ fun RefeicaoCadastroScreen(
             ) {
                 // 1. Alimentos já adicionados
                 if (uiState.currentItems.isNotEmpty()) {
-                   // item { SectionTitle("Itens da refeição") }
-                    items(uiState.currentItems) { item ->
-                        CurrentItemCard(item, onDelete = { viewModel.deleteItem(item.cdAlimento) })
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = CardBackground),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
+                        ) {
+                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                uiState.currentItems.forEachIndexed { index, item ->
+                                    CurrentItemRow(
+                                        item = item,
+                                        onDelete = { viewModel.deleteItem(item.cdAlimento) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -277,33 +290,40 @@ fun EmptyMessage(message: String) {
 }
 
 @Composable
-fun CurrentItemCard(item: RefeicaoItemComDescricao, onDelete: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
+fun CurrentItemRow(item: RefeicaoItemComDescricao, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .padding(start = 12.dp, end = 0.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Text(
+            text = item.dsAlimento ?: "Alimento desconhecido",
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            modifier = Modifier.weight(1f)
+        )
+        
+        Text(
+            text = "${item.nmQnt?.toInt() ?: 0} ${item.dsUnidade ?: ""}",
+            color = TextPrimary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.size(32.dp)
         ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    text = item.dsAlimento ?: "Alimento desconhecido",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
-                )
-                Text(
-                    text = "${item.nmQnt?.toInt() ?: 0} ${item.dsUnidade ?: ""}",
-                    color = TextSecondary,
-                    fontSize = 12.sp
-                )
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = TealLight)
-            }
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = null,
+                tint = TealLight,
+                modifier = Modifier.size(18.dp)
+            )
         }
     }
 }
