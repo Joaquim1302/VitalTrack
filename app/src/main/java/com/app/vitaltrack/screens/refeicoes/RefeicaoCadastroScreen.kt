@@ -1,7 +1,6 @@
 package com.app.vitaltrack.screens.refeicoes
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -153,7 +152,7 @@ fun RefeicaoCadastroScreen(
                                         viewModel.onSearchQueryChange(it)
                                     },
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text("Buscar alimento...", color = TextSecondary) },
+                                    placeholder = { Text("Pesquisar alimento", color = TextSecondary) },
                                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TealLight) },
                                     colors = OutlinedTextFieldDefaults.colors(
                                         focusedBorderColor = TealLight,
@@ -165,14 +164,38 @@ fun RefeicaoCadastroScreen(
                                     shape = RoundedCornerShape(12.dp)
                                 )
 
-                                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
                                     if (uiState.availableFoods.isEmpty()) {
-                                        item { EmptyMessage("Nenhum alimento encontrado.") }
+                                        item { 
+                                            Box(
+                                                modifier = Modifier.fillParentMaxSize(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = "Nenhum alimento encontrado",
+                                                    color = TextSecondary,
+                                                    fontSize = 16.sp
+                                                )
+                                            }
+                                        }
                                     } else {
                                         items(uiState.availableFoods) { alimento ->
+                                            val isSelected = viewModel.isAlimentoSelecionado(alimento.cdAlimento)
                                             AlimentoDisponivelCard(
                                                 alimento = alimento,
-                                                onSelect = { viewModel.selecionarAlimentoParaAdicionar(alimento) }
+                                                isSelected = isSelected,
+                                                onSelect = { 
+                                                    if (isSelected) {
+                                                        // Se já está selecionado, busca o item na lista para editar
+                                                        val item = uiState.alimentosSelecionados.find { it.cdAlimento == alimento.cdAlimento }
+                                                        item?.let { viewModel.selecionarAlimentoParaEditar(it) }
+                                                    } else {
+                                                        viewModel.selecionarAlimentoParaAdicionar(alimento)
+                                                    }
+                                                }
                                             )
                                         }
                                     }
@@ -368,22 +391,69 @@ fun CurrentItemRow(
 }
 
 @Composable
-fun AlimentoDisponivelCard(alimento: AlimentoDisponivel, onSelect: () -> Unit) {
+fun AlimentoDisponivelCard(
+    alimento: AlimentoDisponivel,
+    isSelected: Boolean,
+    onSelect: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onSelect() },
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
-        shape = RoundedCornerShape(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) TealLight.copy(alpha = 0.15f) else CardBackground
+        ),
+        shape = RoundedCornerShape(12.dp),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, TealLight.copy(alpha = 0.5f)) else null
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.Restaurant, contentDescription = null, tint = TealLight)
-            Spacer(Modifier.width(12.dp))
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onSelect() },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = TealLight,
+                    uncheckedColor = CardBorder,
+                    checkmarkColor = TextPrimary
+                )
+            )
+            
+            Spacer(Modifier.width(8.dp))
+            
             Column(Modifier.weight(1f)) {
-                Text(alimento.dsAlimento ?: "", color = TextPrimary, fontWeight = FontWeight.Medium)
-                if (alimento.dsUnidade != null) {
-                    Text(alimento.dsUnidade, color = TextSecondary, fontSize = 12.sp)
+                Text(
+                    text = alimento.dsAlimento ?: "",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp
+                )
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val infoNutricional = listOfNotNull(
+                        alimento.nmCal?.let { "${it.toInt()} kcal" },
+                        alimento.nmProt?.let { "P: ${it.toInt()}g" },
+                        alimento.nmCarb?.let { "C: ${it.toInt()}g" },
+                        alimento.nmGord?.let { "G: ${it.toInt()}g" }
+                    ).joinToString("  •  ")
+                    
+                    Text(
+                        text = infoNutricional,
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
                 }
             }
-            Icon(Icons.Default.Add, contentDescription = null, tint = TealLight)
+            
+            Icon(
+                imageVector = if (isSelected) Icons.Default.Edit else Icons.Default.Add,
+                contentDescription = null,
+                tint = TealLight
+            )
         }
     }
 }

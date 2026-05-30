@@ -69,7 +69,7 @@ fun FoodQuantityDialog(
                         value = quantityStr,
                         onValueChange = { quantityStr = it },
                         label = { Text("Quantidade") },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(), // Alterado de weight(1f) para fillMaxWidth()
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = TextPrimary,
@@ -79,6 +79,7 @@ fun FoodQuantityDialog(
                         )
                     )
 
+                    /* SELETOR DE UNIDADE COMENTADO PARA VERSÃO POSTERIOR
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded },
@@ -114,6 +115,7 @@ fun FoodQuantityDialog(
                             }
                         }
                     }
+                    */
                 }
 
                 // Painel Nutricional

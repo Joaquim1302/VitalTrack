@@ -70,6 +70,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _searchQuery.value = query
     }
 
+    fun isAlimentoSelecionado(alimentoId: Long): Boolean {
+        return _uiState.value.alimentosSelecionados.any { it.cdAlimento == alimentoId }
+    }
+
     fun selecionarAlimentoParaAdicionar(alimento: AlimentoDisponivel) {
         _uiState.update { it.copy(alimentoDisponivelSelecionado = alimento) }
     }
