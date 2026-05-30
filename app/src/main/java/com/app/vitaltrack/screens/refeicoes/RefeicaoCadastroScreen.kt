@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +31,7 @@ import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RefeicaoCadastroScreen(
     date: String,
@@ -79,19 +79,17 @@ fun RefeicaoCadastroScreen(
                     .padding(innerPadding)
             ) {
                 val abas = AbaAdicionarAlimento.entries
-                ScrollableTabRow(
+                SecondaryScrollableTabRow(
                     selectedTabIndex = abas.indexOf(uiState.abaSelecionada),
                     containerColor = Color.Transparent,
                     contentColor = TealLight,
                     edgePadding = 20.dp,
                     divider = {},
-                    indicator = { tabPositions ->
-                        if (abas.indexOf(uiState.abaSelecionada) < tabPositions.size) {
-                            TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[abas.indexOf(uiState.abaSelecionada)]),
-                                color = TealLight
-                            )
-                        }
+                    indicator = {
+                        TabRowDefaults.SecondaryIndicator(
+                            modifier = Modifier.tabIndicatorOffset(selectedTabIndex = abas.indexOf(uiState.abaSelecionada)),
+                            color = TealLight
+                        )
                     }
                 ) {
                     abas.forEach { aba ->
@@ -231,7 +229,7 @@ fun RefeicaoCadastroScreen(
                 baseCarb = alimento.nmCarb ?: 0.0,
                 baseGord = alimento.nmGord ?: 0.0,
                 baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
-                onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty) },
+                onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
         }
@@ -247,7 +245,7 @@ fun RefeicaoCadastroScreen(
                 baseQuantity = item.nmQntBase?.toDouble() ?: 100.0,
                 initialQuantity = item.nmQnt ?: 100.0,
                 initialUnit = item.dsUnidade ?: "g",
-                onSalvar = { qty, unit -> viewModel.updateItem(item.cdAlimento, qty) },
+                onSalvar = { qty, unit -> viewModel.updateItem(item.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarEdicaoAlimento() }
             )
         }

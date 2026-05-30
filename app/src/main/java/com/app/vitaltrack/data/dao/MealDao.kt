@@ -64,7 +64,7 @@ interface MealDao {
             r.CD_FASE,
             r.CD_REFEICAO_TP,
             r.NM_QNT,
-            u.DS_UNIDADE,
+            COALESCE(r.DS_UNIDADE, u.DS_UNIDADE) AS DS_UNIDADE,
             a.NM_CAL,
             a.NM_PROT,
             a.NM_CARB,

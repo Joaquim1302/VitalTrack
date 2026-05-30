@@ -67,7 +67,7 @@ class MealRepository(private val mealDao: MealDao) {
         }
     }
 
-    suspend fun addFoodToMeal(date: String, clienteId: Long, refeicaoTipoId: Int, alimentoId: Long, quantity: Double) = withContext(Dispatchers.IO) {
+    suspend fun addFoodToMeal(date: String, clienteId: Long, refeicaoTipoId: Int, alimentoId: Long, quantity: Double, unit: String) = withContext(Dispatchers.IO) {
         val existing = mealDao.getSpecificMealItemSync(date, refeicaoTipoId, alimentoId, clienteId)
         val newQuantity = (existing?.nmQnt ?: 0.0) + quantity
         
@@ -77,19 +77,21 @@ class MealRepository(private val mealDao: MealDao) {
             cdCliente = clienteId,
             cdFase = 1,
             cdRefeicaoTp = refeicaoTipoId,
-            nmQnt = newQuantity
+            nmQnt = newQuantity,
+            dsUnidade = unit
         )
         mealDao.insertMealItems(listOf(item))
     }
 
-    suspend fun updateFoodInMeal(date: String, clienteId: Long, refeicaoTipoId: Int, alimentoId: Long, quantity: Double) = withContext(Dispatchers.IO) {
+    suspend fun updateFoodInMeal(date: String, clienteId: Long, refeicaoTipoId: Int, alimentoId: Long, quantity: Double, unit: String) = withContext(Dispatchers.IO) {
         val item = RefeicaoItemEntity(
             dtConsumo = date,
             cdAlimento = alimentoId,
             cdCliente = clienteId,
             cdFase = 1,
             cdRefeicaoTp = refeicaoTipoId,
-            nmQnt = quantity
+            nmQnt = quantity,
+            dsUnidade = unit
         )
         mealDao.insertMealItems(listOf(item))
     }

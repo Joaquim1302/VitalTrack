@@ -24,5 +24,8 @@ data class RefeicaoItemEntity(
     val cdRefeicaoTp: Int,
     
     @ColumnInfo(name = "NM_QNT")
-    val nmQnt: Double?
+    val nmQnt: Double?,
+
+    @ColumnInfo(name = "DS_UNIDADE")
+    val dsUnidade: String? = "g"
 )

@@ -86,7 +86,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _uiState.update { it.copy(alimentoParaEditar = null) }
     }
 
-    fun addItem(alimentoId: Long, quantity: Double) {
+    fun addItem(alimentoId: Long, quantity: Double, unit: String) {
         if (quantity <= 0) {
             _uiState.update { it.copy(errorMessage = "A quantidade deve ser maior que zero.") }
             return
@@ -98,13 +98,14 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 1, // Mock clienteId
                 _uiState.value.typeId,
                 alimentoId,
-                quantity
+                quantity,
+                unit
             )
             _uiState.update { it.copy(alimentoDisponivelSelecionado = null, successMessage = "Alimento adicionado à refeição.") }
         }
     }
 
-    fun updateItem(alimentoId: Long, quantity: Double) {
+    fun updateItem(alimentoId: Long, quantity: Double, unit: String) {
         if (quantity <= 0) {
             _uiState.update { it.copy(errorMessage = "A quantidade deve ser maior que zero.") }
             return
@@ -116,7 +117,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 1, // Mock clienteId
                 _uiState.value.typeId,
                 alimentoId,
-                quantity
+                quantity,
+                unit
             )
             _uiState.update { it.copy(alimentoParaEditar = null, successMessage = "Quantidade atualizada.") }
         }
