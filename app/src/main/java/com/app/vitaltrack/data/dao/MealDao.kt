@@ -66,6 +66,9 @@ interface MealDao {
             r.NM_QNT,
             u.DS_UNIDADE,
             a.NM_CAL,
+            a.NM_PROT,
+            a.NM_CARB,
+            a.NM_GORD,
             a.NM_QNT_BASE
         FROM tb_DT_refeicoes_itens r
         INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = r.CD_ALIMENTO
@@ -149,5 +152,8 @@ data class RefeicaoItemComDescricao(
     @ColumnInfo(name = "NM_QNT") val nmQnt: Double?,
     @ColumnInfo(name = "DS_UNIDADE") val dsUnidade: String?,
     @ColumnInfo(name = "NM_CAL") val nmCal: Double? = 0.0,
+    @ColumnInfo(name = "NM_PROT") val nmProt: Double? = 0.0,
+    @ColumnInfo(name = "NM_CARB") val nmCarb: Double? = 0.0,
+    @ColumnInfo(name = "NM_GORD") val nmGord: Double? = 0.0,
     @ColumnInfo(name = "NM_QNT_BASE") val nmQntBase: Long? = 1
 )

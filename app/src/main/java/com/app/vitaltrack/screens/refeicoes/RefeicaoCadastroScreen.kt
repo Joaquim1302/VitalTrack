@@ -42,8 +42,6 @@ fun RefeicaoCadastroScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showFavoriteDialog by remember { mutableStateOf(false) }
     var showCopyConfirmDialog by remember { mutableStateOf(false) }
-    var showQuantityDialog by remember { mutableStateOf(false) }
-    var selectedAlimento by remember { mutableStateOf<AlimentoDisponivel?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     
     val snackbarHostState = remember { SnackbarHostState() }
@@ -140,14 +138,49 @@ fun RefeicaoCadastroScreen(
                                         items(uiState.alimentosSelecionados) { item ->
                                             CurrentItemRow(
                                                 item = item,
-                                                onDelete = { viewModel.solicitarRemocaoAlimento(item) }
+                                                onDelete = { viewModel.solicitarRemocaoAlimento(item) },
+                                                onEdit = { viewModel.selecionarAlimentoParaEditar(item) }
                                             )
                                         }
                                     }
                                 }
                             }
                         }
-                        AbaAdicionarAlimento.ALIMENTOS -> Text("Conteúdo da aba Alimentos", color = TextPrimary)
+                        AbaAdicionarAlimento.ALIMENTOS -> {
+                            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                OutlinedTextField(
+                                    value = searchQuery,
+                                    onValueChange = { 
+                                        searchQuery = it
+                                        viewModel.onSearchQueryChange(it)
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = { Text("Buscar alimento...", color = TextSecondary) },
+                                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TealLight) },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = TealLight,
+                                        unfocusedBorderColor = CardBorder,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary,
+                                        cursorColor = TealLight
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+
+                                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    if (uiState.availableFoods.isEmpty()) {
+                                        item { EmptyMessage("Nenhum alimento encontrado.") }
+                                    } else {
+                                        items(uiState.availableFoods) { alimento ->
+                                            AlimentoDisponivelCard(
+                                                alimento = alimento,
+                                                onSelect = { viewModel.selecionarAlimentoParaAdicionar(alimento) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         AbaAdicionarAlimento.RECENTES -> Text("Aba Recentes", color = TextPrimary)
                         AbaAdicionarAlimento.MAIS_CONSUMIDOS -> Text("Aba Mais Consumidos", color = TextPrimary)
                         AbaAdicionarAlimento.REFEICOES_SALVAS -> Text("Aba Refeições Salvas", color = TextPrimary)
@@ -189,14 +222,33 @@ fun RefeicaoCadastroScreen(
             )
         }
 
-        if (showQuantityDialog && selectedAlimento != null) {
-            QuantidadeAlimentoDialog(
-                alimento = selectedAlimento!!,
-                onDismiss = { showQuantityDialog = false },
-                onConfirm = { quantity ->
-                    viewModel.addItem(selectedAlimento!!.cdAlimento, quantity)
-                    showQuantityDialog = false
-                }
+        if (uiState.alimentoDisponivelSelecionado != null) {
+            val alimento = uiState.alimentoDisponivelSelecionado!!
+            FoodQuantityDialog(
+                alimentoNome = alimento.dsAlimento ?: "",
+                baseCalories = alimento.nmCal ?: 0.0,
+                baseProt = alimento.nmProt ?: 0.0,
+                baseCarb = alimento.nmCarb ?: 0.0,
+                baseGord = alimento.nmGord ?: 0.0,
+                baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
+                onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty) },
+                onCancelar = { viewModel.cancelarAdicaoAlimento() }
+            )
+        }
+
+        if (uiState.alimentoParaEditar != null) {
+            val item = uiState.alimentoParaEditar!!
+            FoodQuantityDialog(
+                alimentoNome = item.dsAlimento ?: "",
+                baseCalories = item.nmCal ?: 0.0,
+                baseProt = item.nmProt ?: 0.0,
+                baseCarb = item.nmCarb ?: 0.0,
+                baseGord = item.nmGord ?: 0.0,
+                baseQuantity = item.nmQntBase?.toDouble() ?: 100.0,
+                initialQuantity = item.nmQnt ?: 100.0,
+                initialUnit = item.dsUnidade ?: "g",
+                onSalvar = { qty, unit -> viewModel.updateItem(item.cdAlimento, qty) },
+                onCancelar = { viewModel.cancelarEdicaoAlimento() }
             )
         }
 
@@ -266,12 +318,17 @@ fun EmptyMessage(message: String) {
 }
 
 @Composable
-fun CurrentItemRow(item: RefeicaoItemComDescricao, onDelete: () -> Unit) {
+fun CurrentItemRow(
+    item: RefeicaoItemComDescricao,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
     val calorias = ((item.nmQnt ?: 0.0) / (item.nmQntBase?.toDouble() ?: 1.0)) * (item.nmCal ?: 0.0)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable { onEdit() }
             .padding(vertical = 8.dp)
             .padding(start = 12.dp, end = 0.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -364,51 +421,6 @@ fun FavoriteMealCard(favorite: RefeicaoFavoritaEntity, onImport: () -> Unit) {
             Icon(Icons.Default.FileDownload, contentDescription = null, tint = TealLight)
         }
     }
-}
-
-@Composable
-fun QuantidadeAlimentoDialog(
-    alimento: AlimentoDisponivel,
-    onDismiss: () -> Unit,
-    onConfirm: (Double) -> Unit
-) {
-    var quantity by remember { mutableStateOf(alimento.nmQntBase?.toString() ?: "1") }
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(alimento.dsAlimento ?: "Quantidade") },
-        text = {
-            Column {
-                Text("Informe a quantidade (${alimento.dsUnidade ?: ""})", color = TextSecondary, fontSize = 14.sp)
-                Spacer(Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = quantity,
-                    onValueChange = { quantity = it },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { 
-                quantity.toDoubleOrNull()?.let { if (it > 0) onConfirm(it) }
-            }) {
-                Text("Adicionar", color = TealLight)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar", color = TextSecondary)
-            }
-        },
-        containerColor = BackgroundDark,
-        titleContentColor = TextPrimary,
-        textContentColor = TextSecondary
-    )
 }
 
 @Composable

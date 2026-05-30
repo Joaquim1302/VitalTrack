@@ -3,6 +3,7 @@ package com.app.vitaltrack.screens.refeicoes
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.vitaltrack.data.dao.AlimentoDisponivel
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.database.AppDatabase
@@ -69,6 +70,22 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _searchQuery.value = query
     }
 
+    fun selecionarAlimentoParaAdicionar(alimento: AlimentoDisponivel) {
+        _uiState.update { it.copy(alimentoDisponivelSelecionado = alimento) }
+    }
+
+    fun cancelarAdicaoAlimento() {
+        _uiState.update { it.copy(alimentoDisponivelSelecionado = null) }
+    }
+
+    fun selecionarAlimentoParaEditar(item: RefeicaoItemComDescricao) {
+        _uiState.update { it.copy(alimentoParaEditar = item) }
+    }
+
+    fun cancelarEdicaoAlimento() {
+        _uiState.update { it.copy(alimentoParaEditar = null) }
+    }
+
     fun addItem(alimentoId: Long, quantity: Double) {
         if (quantity <= 0) {
             _uiState.update { it.copy(errorMessage = "A quantidade deve ser maior que zero.") }
@@ -83,7 +100,25 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 alimentoId,
                 quantity
             )
-            _uiState.update { it.copy(successMessage = "Alimento adicionado à refeição.") }
+            _uiState.update { it.copy(alimentoDisponivelSelecionado = null, successMessage = "Alimento adicionado à refeição.") }
+        }
+    }
+
+    fun updateItem(alimentoId: Long, quantity: Double) {
+        if (quantity <= 0) {
+            _uiState.update { it.copy(errorMessage = "A quantidade deve ser maior que zero.") }
+            return
+        }
+
+        viewModelScope.launch {
+            repository.updateFoodInMeal(
+                _uiState.value.date,
+                1, // Mock clienteId
+                _uiState.value.typeId,
+                alimentoId,
+                quantity
+            )
+            _uiState.update { it.copy(alimentoParaEditar = null, successMessage = "Quantidade atualizada.") }
         }
     }
 

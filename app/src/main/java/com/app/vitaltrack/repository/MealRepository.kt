@@ -82,6 +82,18 @@ class MealRepository(private val mealDao: MealDao) {
         mealDao.insertMealItems(listOf(item))
     }
 
+    suspend fun updateFoodInMeal(date: String, clienteId: Long, refeicaoTipoId: Int, alimentoId: Long, quantity: Double) = withContext(Dispatchers.IO) {
+        val item = RefeicaoItemEntity(
+            dtConsumo = date,
+            cdAlimento = alimentoId,
+            cdCliente = clienteId,
+            cdFase = 1,
+            cdRefeicaoTp = refeicaoTipoId,
+            nmQnt = quantity
+        )
+        mealDao.insertMealItems(listOf(item))
+    }
+
     suspend fun deleteItem(date: String, refeicaoTipoId: Int, alimentoId: Long) = withContext(Dispatchers.IO) {
         mealDao.deleteItem(date, refeicaoTipoId, alimentoId)
     }
