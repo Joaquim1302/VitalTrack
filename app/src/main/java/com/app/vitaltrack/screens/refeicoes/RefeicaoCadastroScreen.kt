@@ -126,7 +126,27 @@ fun RefeicaoCadastroScreen(
                         .padding(horizontal = 20.dp, vertical = 16.dp)
                 ) {
                     when (uiState.abaSelecionada) {
-                        AbaAdicionarAlimento.SELECIONADOS -> Text("Aba Selecionados", color = TextPrimary)
+                        AbaAdicionarAlimento.SELECIONADOS -> {
+                            if (uiState.alimentosSelecionados.isEmpty()) {
+                                EmptyMessage("Nenhum alimento selecionado.\nAdicione alimentos pela aba Alimentos.")
+                            } else {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = CardBackground),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
+                                ) {
+                                    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
+                                        items(uiState.alimentosSelecionados) { item ->
+                                            CurrentItemRow(
+                                                item = item,
+                                                onDelete = { viewModel.solicitarRemocaoAlimento(item) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         AbaAdicionarAlimento.ALIMENTOS -> Text("Conteúdo da aba Alimentos", color = TextPrimary)
                         AbaAdicionarAlimento.RECENTES -> Text("Aba Recentes", color = TextPrimary)
                         AbaAdicionarAlimento.MAIS_CONSUMIDOS -> Text("Aba Mais Consumidos", color = TextPrimary)
@@ -134,6 +154,29 @@ fun RefeicaoCadastroScreen(
                     }
                 }
             }
+        }
+
+        if (uiState.alimentoParaRemover != null) {
+            AlertDialog(
+                onDismissRequest = { viewModel.cancelarRemocaoAlimento() },
+                title = { Text("Remover alimento?") },
+                text = { 
+                    Text("Deseja remover \"${uiState.alimentoParaRemover?.dsAlimento}\" da refeição?") 
+                },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.confirmarRemocaoAlimento() }) {
+                        Text("Remover", color = Color.Red)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.cancelarRemocaoAlimento() }) {
+                        Text("Cancelar", color = TextSecondary)
+                    }
+                },
+                containerColor = BackgroundDark,
+                titleContentColor = TextPrimary,
+                textContentColor = TextSecondary
+            )
         }
 
         if (showFavoriteDialog) {
@@ -224,38 +267,46 @@ fun EmptyMessage(message: String) {
 
 @Composable
 fun CurrentItemRow(item: RefeicaoItemComDescricao, onDelete: () -> Unit) {
+    val calorias = ((item.nmQnt ?: 0.0) / (item.nmQntBase?.toDouble() ?: 1.0)) * (item.nmCal ?: 0.0)
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp)
+            .padding(vertical = 8.dp)
             .padding(start = 12.dp, end = 0.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = item.dsAlimento ?: "Alimento desconhecido",
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.weight(1f)
-        )
-        
-        Text(
-            text = "${item.nmQnt?.toInt() ?: 0} ${item.dsUnidade ?: ""}",
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-            modifier = Modifier.padding(start = 8.dp)
-        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = item.dsAlimento ?: "Alimento desconhecido",
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            )
+            Row {
+                Text(
+                    text = "${item.nmQnt?.toInt() ?: 0} ${item.dsUnidade ?: ""}",
+                    color = TextSecondary,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "•  ${calorias.toInt()} kcal",
+                    color = TextSecondary,
+                    fontSize = 14.sp
+                )
+            }
+        }
 
         IconButton(
             onClick = onDelete,
-            modifier = Modifier.size(32.dp)
+            modifier = Modifier.size(40.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = null,
+                contentDescription = "Remover",
                 tint = TealLight,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(20.dp)
             )
         }
     }

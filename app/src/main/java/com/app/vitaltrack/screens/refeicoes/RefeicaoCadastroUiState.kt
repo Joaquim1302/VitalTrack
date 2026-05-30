@@ -18,6 +18,7 @@ data class RefeicaoCadastroUiState(
     val refeicoesSalvas: List<RefeicaoFavoritaEntity> = emptyList(),
     val searchResults: List<com.app.vitaltrack.data.entity.AlimentoEntity> = emptyList(),
     val isLoading: Boolean = false,
+    val alimentoParaRemover: RefeicaoItemComDescricao? = null,
     val successMessage: String? = null,
     val errorMessage: String? = null,
 ) {

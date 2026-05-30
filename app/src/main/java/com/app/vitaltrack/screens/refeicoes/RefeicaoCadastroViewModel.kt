@@ -3,6 +3,7 @@ package com.app.vitaltrack.screens.refeicoes
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.model.Meal
@@ -89,6 +90,22 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
     fun deleteItem(alimentoId: Long) {
         viewModelScope.launch {
             repository.deleteItem(_uiState.value.date, _uiState.value.typeId, alimentoId)
+        }
+    }
+
+    fun solicitarRemocaoAlimento(item: RefeicaoItemComDescricao) {
+        _uiState.update { it.copy(alimentoParaRemover = item) }
+    }
+
+    fun cancelarRemocaoAlimento() {
+        _uiState.update { it.copy(alimentoParaRemover = null) }
+    }
+
+    fun confirmarRemocaoAlimento() {
+        val item = _uiState.value.alimentoParaRemover ?: return
+        viewModelScope.launch {
+            repository.deleteItem(_uiState.value.date, _uiState.value.typeId, item.cdAlimento)
+            _uiState.update { it.copy(alimentoParaRemover = null, successMessage = "Alimento removido.") }
         }
     }
 

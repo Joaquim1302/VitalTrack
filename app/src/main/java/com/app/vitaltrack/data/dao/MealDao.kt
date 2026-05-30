@@ -64,7 +64,9 @@ interface MealDao {
             r.CD_FASE,
             r.CD_REFEICAO_TP,
             r.NM_QNT,
-            u.DS_UNIDADE
+            u.DS_UNIDADE,
+            a.NM_CAL,
+            a.NM_QNT_BASE
         FROM tb_DT_refeicoes_itens r
         INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = r.CD_ALIMENTO
         LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
@@ -145,5 +147,7 @@ data class RefeicaoItemComDescricao(
     @ColumnInfo(name = "CD_FASE") val cdFase: Int?,
     @ColumnInfo(name = "CD_REFEICAO_TP") val cdRefeicaoTp: Int,
     @ColumnInfo(name = "NM_QNT") val nmQnt: Double?,
-    @ColumnInfo(name = "DS_UNIDADE") val dsUnidade: String?
+    @ColumnInfo(name = "DS_UNIDADE") val dsUnidade: String?,
+    @ColumnInfo(name = "NM_CAL") val nmCal: Double? = 0.0,
+    @ColumnInfo(name = "NM_QNT_BASE") val nmQntBase: Long? = 1
 )
