@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,130 +75,62 @@ fun RefeicaoCadastroScreen(
                 HeaderSection("${uiState.mealEmoji} ${uiState.mealName}", onBackClick)
             }
         ) { innerPadding ->
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                // 1. Alimentos já adicionados
-                if (uiState.currentItems.isNotEmpty()) {
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = CardBackground),
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
-                        ) {
-                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                                uiState.currentItems.forEachIndexed { index, item ->
-                                    CurrentItemRow(
-                                        item = item,
-                                        onDelete = { viewModel.deleteItem(item.cdAlimento) }
-                                    )
-                                }
-                            }
+                val abas = AbaAdicionarAlimento.entries
+                ScrollableTabRow(
+                    selectedTabIndex = abas.indexOf(uiState.abaSelecionada),
+                    containerColor = Color.Transparent,
+                    contentColor = TealLight,
+                    edgePadding = 20.dp,
+                    divider = {},
+                    indicator = { tabPositions ->
+                        if (abas.indexOf(uiState.abaSelecionada) < tabPositions.size) {
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[abas.indexOf(uiState.abaSelecionada)]),
+                                color = TealLight
+                            )
                         }
                     }
-                }
-
-                // 2. Busca e Alimentos disponíveis
-                item {
-                    SectionTitle("Buscar alimento")
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { 
-                            searchQuery = it
-                            viewModel.onSearchQueryChange(it)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Nome do alimento...", color = TextSecondary) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TealLight) },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = TealLight,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            cursorColor = TealLight
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                }
-
-                item { SectionTitle("Alimentos disponíveis") }
-                if (uiState.availableFoods.isEmpty()) {
-                    item { EmptyMessage("Nenhum alimento cadastrado.") }
-                } else {
-                    items(uiState.availableFoods) { alimento ->
-                        AlimentoDisponivelCard(
-                            alimento = alimento,
-                            onSelect = { 
-                                selectedAlimento = alimento
-                                showQuantityDialog = true
-                            }
+                ) {
+                    abas.forEach { aba ->
+                        val titulo = when (aba) {
+                            AbaAdicionarAlimento.SELECIONADOS -> "Selecionados"
+                            AbaAdicionarAlimento.ALIMENTOS -> "Alimentos"
+                            AbaAdicionarAlimento.RECENTES -> "Consumidos Recentemente"
+                            AbaAdicionarAlimento.MAIS_CONSUMIDOS -> "Mais Consumidos"
+                            AbaAdicionarAlimento.REFEICOES_SALVAS -> "Refeições Salvas"
+                        }
+                        Tab(
+                            selected = uiState.abaSelecionada == aba,
+                            onClick = { viewModel.selecionarAba(aba) },
+                            text = {
+                                Text(
+                                    text = titulo,
+                                    fontSize = 14.sp,
+                                    fontWeight = if (uiState.abaSelecionada == aba) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            selectedContentColor = TealLight,
+                            unselectedContentColor = TextSecondary
                         )
                     }
                 }
 
-                // 3. Mais usados
-                item { SectionTitle("Mais usados") }
-                if (uiState.mostUsed.isEmpty()) {
-                    item { EmptyMessage("Nenhum alimento usado recentemente.") }
-                } else {
-                    items(uiState.mostUsed) { food ->
-                        MostUsedCard(food, onAdd = { 
-                            selectedAlimento = AlimentoDisponivel(
-                                cdAlimento = food.cdAlimento,
-                                dsAlimento = food.dsAlimento,
-                                cdUnidade = food.cdUnidade,
-                                dsUnidade = food.dsUnidade,
-                                nmQntBase = 100L, // Valor padrão se não tiver
-                                nmCal = 0.0, nmProt = 0.0, nmCarb = 0.0, nmGord = 0.0
-                            )
-                            showQuantityDialog = true
-                        })
-                    }
-                }
-
-                // 4. Refeições favoritas
-                item { SectionTitle("Refeições favoritas") }
-                if (uiState.favorites.isEmpty()) {
-                    item { EmptyMessage("Nenhuma refeição favorita salva.") }
-                } else {
-                    items(uiState.favorites) { favorite ->
-                        FavoriteMealCard(favorite, onImport = { viewModel.importFavorite(favorite.cdFavorita) })
-                    }
-                }
-
-                // 5. Copiar anterior
-                item {
-                    Button(
-                        onClick = { showCopyConfirmDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = TealLight),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Copiar refeição anterior")
-                    }
-                }
-
-                // 6. Botão salvar refeição atual como favorita
-                if (uiState.currentItems.isNotEmpty()) {
-                    item {
-                        Button(
-                            onClick = { showFavoriteDialog = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = TealDark),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.Favorite, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text("Salvar como favorita")
-                        }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    when (uiState.abaSelecionada) {
+                        AbaAdicionarAlimento.SELECIONADOS -> Text("Aba Selecionados", color = TextPrimary)
+                        AbaAdicionarAlimento.ALIMENTOS -> Text("Conteúdo da aba Alimentos", color = TextPrimary)
+                        AbaAdicionarAlimento.RECENTES -> Text("Aba Recentes", color = TextPrimary)
+                        AbaAdicionarAlimento.MAIS_CONSUMIDOS -> Text("Aba Mais Consumidos", color = TextPrimary)
+                        AbaAdicionarAlimento.REFEICOES_SALVAS -> Text("Aba Refeições Salvas", color = TextPrimary)
                     }
                 }
             }
