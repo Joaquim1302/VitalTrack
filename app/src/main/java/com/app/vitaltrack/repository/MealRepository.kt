@@ -19,6 +19,8 @@ class MealRepository(private val mealDao: MealDao) {
 
     fun searchAlimentosDisponiveis(query: String) = mealDao.searchAlimentosDisponiveis(query)
 
+    fun getRecentFoods(startDate: String) = mealDao.getRecentFoods(startDate)
+
     suspend fun saveMealAsFavorite(name: String, refeicaoTipoId: Int?, items: List<RefeicaoItemEntity>) = withContext(Dispatchers.IO) {
         val favoriteId = mealDao.insertFavorite(
             RefeicaoFavoritaEntity(dsFavorita = name, cdRefeicaoTp = refeicaoTipoId)

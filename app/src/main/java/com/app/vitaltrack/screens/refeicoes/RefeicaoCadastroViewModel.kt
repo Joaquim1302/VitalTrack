@@ -4,6 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
+import com.app.vitaltrack.data.dao.MostUsedFood
+import com.app.vitaltrack.data.dao.RecentFood
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.database.AppDatabase
@@ -13,6 +15,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
@@ -28,6 +32,11 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         
         repository.getMostUsedFoods().onEach { list ->
             _uiState.update { it.copy(maisConsumidos = list) }
+        }.launchIn(viewModelScope)
+
+        val thirtyDaysAgo = LocalDate.now().minusDays(30).format(DateTimeFormatter.ISO_LOCAL_DATE)
+        repository.getRecentFoods(thirtyDaysAgo).onEach { list ->
+            _uiState.update { it.copy(consumidosRecentemente = list) }
         }.launchIn(viewModelScope)
 
         _searchQuery
@@ -78,8 +87,12 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _uiState.update { it.copy(alimentoDisponivelSelecionado = alimento) }
     }
 
+    fun selecionarAlimentoRecentParaAdicionar(alimento: RecentFood) {
+        _uiState.update { it.copy(alimentoRecentSelecionado = alimento) }
+    }
+
     fun cancelarAdicaoAlimento() {
-        _uiState.update { it.copy(alimentoDisponivelSelecionado = null) }
+        _uiState.update { it.copy(alimentoDisponivelSelecionado = null, alimentoRecentSelecionado = null) }
     }
 
     fun selecionarAlimentoParaEditar(item: RefeicaoItemComDescricao) {
@@ -105,7 +118,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 quantity,
                 unit
             )
-            _uiState.update { it.copy(alimentoDisponivelSelecionado = null, successMessage = "Alimento adicionado à refeição.") }
+            _uiState.update { it.copy(alimentoDisponivelSelecionado = null, alimentoRecentSelecionado = null, successMessage = "Alimento adicionado à refeição.") }
         }
     }
 
@@ -159,7 +172,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                     cdCliente = it.cdCliente,
                     cdFase = it.cdFase,
                     cdRefeicaoTp = it.cdRefeicaoTp,
-                    nmQnt = it.nmQnt
+                    nmQnt = it.nmQnt,
+                    dsUnidade = it.dsUnidade
                 )
             }
             repository.saveMealAsFavorite(name, _uiState.value.typeId, itemsToSave)

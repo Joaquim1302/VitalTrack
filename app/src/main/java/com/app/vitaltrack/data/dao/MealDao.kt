@@ -88,6 +88,31 @@ interface MealDao {
 
     @Query("""
         SELECT 
+            r.DT_CONSUMO,
+            r.CD_ALIMENTO,
+            a.DS_ALIMENTO,
+            r.CD_CLIENTE,
+            r.CD_FASE,
+            r.CD_REFEICAO_TP,
+            rt.DS_REFEICAO_TP,
+            r.NM_QNT,
+            COALESCE(r.DS_UNIDADE, u.DS_UNIDADE) AS DS_UNIDADE,
+            a.NM_CAL,
+            a.NM_PROT,
+            a.NM_CARB,
+            a.NM_GORD,
+            a.NM_QNT_BASE
+        FROM tb_DT_refeicoes_itens r
+        INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = r.CD_ALIMENTO
+        INNER JOIN tb_DT_refeicoes_tipos rt ON rt.CD_REFEICAO_TP = r.CD_REFEICAO_TP
+        LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
+        WHERE r.DT_CONSUMO >= :startDate
+        ORDER BY r.DT_CONSUMO DESC
+    """)
+    fun getRecentFoods(startDate: String): Flow<List<RecentFood>>
+
+    @Query("""
+        SELECT 
             a.CD_ALIMENTO,
             a.DS_ALIMENTO,
             a.CD_UNIDADE,
@@ -140,6 +165,23 @@ data class AlimentoDisponivel(
     @ColumnInfo(name = "NM_PROT") val nmProt: Double?,
     @ColumnInfo(name = "NM_CARB") val nmCarb: Double?,
     @ColumnInfo(name = "NM_GORD") val nmGord: Double?
+)
+
+data class RecentFood(
+    @ColumnInfo(name = "DT_CONSUMO") val dtConsumo: String,
+    @ColumnInfo(name = "CD_ALIMENTO") val cdAlimento: Long,
+    @ColumnInfo(name = "DS_ALIMENTO") val dsAlimento: String?,
+    @ColumnInfo(name = "CD_CLIENTE") val cdCliente: Long,
+    @ColumnInfo(name = "CD_FASE") val cdFase: Int?,
+    @ColumnInfo(name = "CD_REFEICAO_TP") val cdRefeicaoTp: Int,
+    @ColumnInfo(name = "DS_REFEICAO_TP") val dsRefeicaoTp: String?,
+    @ColumnInfo(name = "NM_QNT") val nmQnt: Double?,
+    @ColumnInfo(name = "DS_UNIDADE") val dsUnidade: String?,
+    @ColumnInfo(name = "NM_CAL") val nmCal: Double?,
+    @ColumnInfo(name = "NM_PROT") val nmProt: Double?,
+    @ColumnInfo(name = "NM_CARB") val nmCarb: Double?,
+    @ColumnInfo(name = "NM_GORD") val nmGord: Double?,
+    @ColumnInfo(name = "NM_QNT_BASE") val nmQntBase: Long?
 )
 
 data class RefeicaoItemComDescricao(

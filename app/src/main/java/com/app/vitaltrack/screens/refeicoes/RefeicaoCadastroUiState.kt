@@ -2,6 +2,7 @@ package com.app.vitaltrack.screens.refeicoes
 
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
 import com.app.vitaltrack.data.dao.MostUsedFood
+import com.app.vitaltrack.data.dao.RecentFood
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
 
@@ -13,7 +14,7 @@ data class RefeicaoCadastroUiState(
     val mealEmoji: String = "",
     val alimentosSelecionados: List<RefeicaoItemComDescricao> = emptyList(),
     val alimentosDisponiveis: List<AlimentoDisponivel> = emptyList(),
-    val consumidosRecentemente: List<AlimentoDisponivel> = emptyList(),
+    val consumidosRecentemente: List<RecentFood> = emptyList(),
     val maisConsumidos: List<MostUsedFood> = emptyList(),
     val refeicoesSalvas: List<RefeicaoFavoritaEntity> = emptyList(),
     val searchResults: List<com.app.vitaltrack.data.entity.AlimentoEntity> = emptyList(),
@@ -21,6 +22,7 @@ data class RefeicaoCadastroUiState(
     val alimentoParaRemover: RefeicaoItemComDescricao? = null,
     val alimentoParaEditar: RefeicaoItemComDescricao? = null,
     val alimentoDisponivelSelecionado: AlimentoDisponivel? = null,
+    val alimentoRecentSelecionado: RecentFood? = null,
     val successMessage: String? = null,
     val errorMessage: String? = null,
 ) {

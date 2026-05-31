@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
+import com.app.vitaltrack.data.dao.RecentFood
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.AlimentoEntity
 import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
@@ -202,7 +203,35 @@ fun RefeicaoCadastroScreen(
                                 }
                             }
                         }
-                        AbaAdicionarAlimento.RECENTES -> Text("Aba Recentes", color = TextPrimary)
+                        AbaAdicionarAlimento.RECENTES -> {
+                            if (uiState.consumidosRecentemente.isEmpty()) {
+                                EmptyMessage("Nenhum alimento consumido recentemente nos últimos 30 dias.")
+                            } else {
+                                val agrupados = uiState.consumidosRecentemente.groupBy { it.dsRefeicaoTp ?: "OUTROS" }
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    agrupados.forEach { (refeicao, lista) ->
+                                        item {
+                                            Text(
+                                                text = refeicao.uppercase(),
+                                                color = TealLight,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                fontSize = 12.sp,
+                                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                                            )
+                                        }
+                                        items(lista) { alimento ->
+                                            AlimentoRecentCard(
+                                                alimento = alimento,
+                                                onSelect = { viewModel.selecionarAlimentoRecentParaAdicionar(alimento) }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         AbaAdicionarAlimento.MAIS_CONSUMIDOS -> Text("Aba Mais Consumidos", color = TextPrimary)
                         AbaAdicionarAlimento.REFEICOES_SALVAS -> Text("Aba Refeições Salvas", color = TextPrimary)
                     }
@@ -252,6 +281,22 @@ fun RefeicaoCadastroScreen(
                 baseCarb = alimento.nmCarb ?: 0.0,
                 baseGord = alimento.nmGord ?: 0.0,
                 baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
+                onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
+                onCancelar = { viewModel.cancelarAdicaoAlimento() }
+            )
+        }
+
+        if (uiState.alimentoRecentSelecionado != null) {
+            val alimento = uiState.alimentoRecentSelecionado!!
+            FoodQuantityDialog(
+                alimentoNome = alimento.dsAlimento ?: "",
+                baseCalories = alimento.nmCal ?: 0.0,
+                baseProt = alimento.nmProt ?: 0.0,
+                baseCarb = alimento.nmCarb ?: 0.0,
+                baseGord = alimento.nmGord ?: 0.0,
+                baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
+                initialQuantity = alimento.nmQnt ?: 100.0,
+                initialUnit = alimento.dsUnidade ?: "g",
                 onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
@@ -383,6 +428,63 @@ fun CurrentItemRow(
             Icon(
                 imageVector = Icons.Default.Delete,
                 contentDescription = "Remover",
+                tint = TealLight,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun AlimentoRecentCard(
+    alimento: RecentFood,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, CardBorder)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = alimento.dsAlimento ?: "",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "${alimento.nmQnt?.toInt() ?: 0} ${alimento.dsUnidade ?: ""}  •  ${alimento.nmCal?.toInt() ?: 0} kcal",
+                        color = TextSecondary,
+                        fontSize = 13.sp
+                    )
+                }
+                
+                val dataFormatada = try {
+                    val data = java.time.LocalDate.parse(alimento.dtConsumo)
+                    data.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                } catch (e: Exception) {
+                    alimento.dtConsumo
+                }
+
+                Text(
+                    text = "Consumido em $dataFormatada",
+                    color = TextSecondary.copy(alpha = 0.6f),
+                    fontSize = 11.sp
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.Default.History,
+                contentDescription = null,
                 tint = TealLight,
                 modifier = Modifier.size(20.dp)
             )
