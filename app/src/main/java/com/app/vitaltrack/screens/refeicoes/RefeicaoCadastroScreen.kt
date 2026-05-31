@@ -19,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -132,7 +134,10 @@ fun RefeicaoCadastroScreen(
                     when (uiState.abaSelecionada) {
                         AbaAdicionarAlimento.SELECIONADOS -> {
                             if (uiState.alimentosSelecionados.isEmpty()) {
-                                EmptyMessage("Nenhum alimento selecionado.\nAdicione alimentos pela aba Alimentos.")
+                                EmptyState(
+                                    icon = Icons.Default.Info,
+                                    message = "Nenhum alimento selecionado.\nAdicione alimentos pela aba Alimentos."
+                                )
                             } else {
                                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                     Card(
@@ -192,25 +197,17 @@ fun RefeicaoCadastroScreen(
                                     shape = RoundedCornerShape(12.dp)
                                 )
 
-                                LazyColumn(
-                                    state = listStateAlimentos,
-                                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                                    modifier = Modifier.fillMaxSize()
-                                ) {
-                                    if (uiState.availableFoods.isEmpty()) {
-                                        item { 
-                                            Box(
-                                                modifier = Modifier.fillParentMaxSize(),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Text(
-                                                    text = "Nenhum alimento encontrado",
-                                                    color = TextSecondary,
-                                                    fontSize = 16.sp
-                                                )
-                                            }
-                                        }
-                                    } else {
+                                if (uiState.availableFoods.isEmpty()) {
+                                    EmptyState(
+                                        icon = Icons.Default.Search,
+                                        message = "Nenhum alimento encontrado"
+                                    )
+                                } else {
+                                    LazyColumn(
+                                        state = listStateAlimentos,
+                                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
                                         items(uiState.availableFoods) { alimento ->
                                             val isSelected = viewModel.isAlimentoSelecionado(alimento.cdAlimento)
                                             AlimentoDisponivelCard(
@@ -220,7 +217,7 @@ fun RefeicaoCadastroScreen(
                                                     if (isSelected) {
                                                         // Se já está selecionado, busca o item na lista para editar
                                                         val item = uiState.alimentosSelecionados.find { it.cdAlimento == alimento.cdAlimento }
-                                                        item?.let { viewModel.selecionarAlimentoParaEditar(it) }
+                                                        item?.let { viewModel.selecionarAlimentoParaEditar(item) }
                                                     } else {
                                                         viewModel.selecionarAlimentoParaAdicionar(alimento)
                                                     }
@@ -233,7 +230,10 @@ fun RefeicaoCadastroScreen(
                         }
                         AbaAdicionarAlimento.RECENTES -> {
                             if (uiState.consumidosRecentemente.isEmpty()) {
-                                EmptyMessage("Nenhum alimento consumido recentemente nos últimos 30 dias.")
+                                EmptyState(
+                                    icon = Icons.Default.History,
+                                    message = "Nenhum alimento consumido recentemente"
+                                )
                             } else {
                                 val agrupados = uiState.consumidosRecentemente.groupBy { it.dsRefeicaoTp ?: "OUTROS" }
                                 LazyColumn(
@@ -263,7 +263,10 @@ fun RefeicaoCadastroScreen(
                         }
                         AbaAdicionarAlimento.MAIS_CONSUMIDOS -> {
                             if (uiState.maisConsumidos.isEmpty()) {
-                                EmptyMessage("Nenhum alimento consumido ainda.\nOs alimentos mais usados aparecerão aqui conforme você cadastrar refeições.")
+                                EmptyState(
+                                    icon = Icons.AutoMirrored.Filled.TrendingUp,
+                                    message = "Nenhum alimento frequente encontrado"
+                                )
                             } else {
                                 LazyColumn(
                                     state = listStateMaisConsumidos,
@@ -281,7 +284,10 @@ fun RefeicaoCadastroScreen(
                         }
                         AbaAdicionarAlimento.REFEICOES_SALVAS -> {
                             if (uiState.refeicoesSalvas.isEmpty()) {
-                                EmptyMessage("Nenhuma refeição salva ainda.\nMonte uma refeição e salve como modelo para reutilizar depois.")
+                                EmptyState(
+                                    icon = Icons.Default.Save,
+                                    message = "Nenhuma refeição salva"
+                                )
                             } else {
                                 LazyColumn(
                                     state = listStateRefeicoesSalvas,
@@ -464,6 +470,34 @@ fun SectionTitle(title: String) {
 @Composable
 fun EmptyMessage(message: String) {
     Text(message, color = TextSecondary, fontSize = 14.sp, modifier = Modifier.padding(vertical = 8.dp))
+}
+
+@Composable
+fun EmptyState(
+    icon: ImageVector,
+    message: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = TextSecondary.copy(alpha = 0.5f)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = message,
+            color = TextSecondary,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        )
+    }
 }
 
 @Composable
