@@ -36,29 +36,35 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         val db = AppDatabase.getDatabase(application)
         repository = MealRepository(db.mealDao(), db.refeicaoSalvaDao())
         
-        repository.getMostUsedFoods().onEach { list ->
-            _uiState.update { it.copy(maisConsumidos = list) }
-        }.launchIn(viewModelScope)
+        repository.getMostUsedFoods()
+            .distinctUntilChanged()
+            .onEach { list ->
+                _uiState.update { it.copy(maisConsumidos = list) }
+            }.launchIn(viewModelScope)
 
         val thirtyDaysAgo = LocalDate.now().minusDays(30).format(DateTimeFormatter.ISO_LOCAL_DATE)
-        repository.getRecentFoods(thirtyDaysAgo).onEach { list ->
-            _uiState.update { it.copy(consumidosRecentemente = list) }
-        }.launchIn(viewModelScope)
+        repository.getRecentFoods(thirtyDaysAgo)
+            .distinctUntilChanged()
+            .onEach { list ->
+                _uiState.update { it.copy(consumidosRecentemente = list) }
+            }.launchIn(viewModelScope)
 
-        repository.listarRefeicoesSalvas().onEach { list ->
-            val uiList = list.map {
-                RefeicaoSalvaUi(
-                    id = it.refeicao.cdRefeicaoSalva,
-                    nome = it.refeicao.dsRefeicaoSalva,
-                    calorias = it.refeicao.nmCalTotal,
-                    proteinas = it.refeicao.nmProtTotal,
-                    carboidratos = it.refeicao.nmCarbTotal,
-                    gorduras = it.refeicao.nmGordTotal,
-                    quantidadeItens = it.itens.size
-                )
-            }
-            _uiState.update { it.copy(refeicoesSalvas = uiList) }
-        }.launchIn(viewModelScope)
+        repository.listarRefeicoesSalvas()
+            .distinctUntilChanged()
+            .onEach { list ->
+                val uiList = list.map {
+                    RefeicaoSalvaUi(
+                        id = it.refeicao.cdRefeicaoSalva,
+                        nome = it.refeicao.dsRefeicaoSalva,
+                        calorias = it.refeicao.nmCalTotal,
+                        proteinas = it.refeicao.nmProtTotal,
+                        carboidratos = it.refeicao.nmCarbTotal,
+                        gorduras = it.refeicao.nmGordTotal,
+                        quantidadeItens = it.itens.size
+                    )
+                }
+                _uiState.update { it.copy(refeicoesSalvas = uiList) }
+            }.launchIn(viewModelScope)
 
         _searchQuery
             .debounce(300)
@@ -82,13 +88,17 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         val mealEmoji = meal?.emoji ?: ""
         _uiState.update { it.copy(date = date, typeId = typeId, mealName = mealName, mealEmoji = mealEmoji) }
         
-        repository.getItemsForMeal(date, typeId).onEach { items ->
-            _uiState.update { it.copy(alimentosSelecionados = items) }
-        }.launchIn(viewModelScope)
+        repository.getItemsForMeal(date, typeId)
+            .distinctUntilChanged()
+            .onEach { items ->
+                _uiState.update { it.copy(alimentosSelecionados = items) }
+            }.launchIn(viewModelScope)
 
-        repository.getFavorites(typeId).onEach { list ->
-            _uiState.update { it.copy(refeicoesFavoritas = list) }
-        }.launchIn(viewModelScope)
+        repository.getFavorites(typeId)
+            .distinctUntilChanged()
+            .onEach { list ->
+                _uiState.update { it.copy(refeicoesFavoritas = list) }
+            }.launchIn(viewModelScope)
     }
 
     fun selecionarAba(aba: AbaAdicionarAlimento) {

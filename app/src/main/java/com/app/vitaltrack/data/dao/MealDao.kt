@@ -139,8 +139,9 @@ interface MealDao {
         FROM tb_DT_alimentos a
         LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
         ORDER BY a.DS_ALIMENTO ASC
+        LIMIT :limit OFFSET :offset
     """)
-    fun getAlimentosDisponiveis(): Flow<List<AlimentoDisponivel>>
+    fun getAlimentosDisponiveisPagedSync(limit: Int, offset: Int): List<AlimentoDisponivel>
 
     @Query("""
         SELECT 
@@ -157,8 +158,9 @@ interface MealDao {
         LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
         WHERE a.DS_ALIMENTO LIKE '%' || :query || '%'
         ORDER BY a.DS_ALIMENTO ASC
+        LIMIT :limit OFFSET :offset
     """)
-    fun searchAlimentosDisponiveis(query: String): Flow<List<AlimentoDisponivel>>
+    fun searchAlimentosDisponiveisPagedSync(query: String, limit: Int, offset: Int): List<AlimentoDisponivel>
 }
 
 data class MostUsedFood(

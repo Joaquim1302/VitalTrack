@@ -3,6 +3,8 @@ package com.app.vitaltrack.repository
 import com.app.vitaltrack.data.dao.*
 import com.app.vitaltrack.data.entity.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 
 class MealRepository(
@@ -69,9 +71,31 @@ class MealRepository(
     
     fun getItemsForMeal(date: String, refeicaoTipoId: Int) = mealDao.getItemsForMeal(date, refeicaoTipoId)
 
-    fun getAlimentosDisponiveis() = mealDao.getAlimentosDisponiveis()
+    fun searchAlimentosDisponiveis(query: String): Flow<List<AlimentoDisponivel>> = flow {
+        var offset = 0
+        val pageSize = 100
+        val allResults = mutableListOf<AlimentoDisponivel>()
+        
+        while (true) {
+            val list = withContext(Dispatchers.IO) {
+                if (query.isBlank()) {
+                    mealDao.getAlimentosDisponiveisPagedSync(pageSize, offset)
+                } else {
+                    mealDao.searchAlimentosDisponiveisPagedSync(query, pageSize, offset)
+                }
+            }
+            
+            if (list.isEmpty()) break
+            
+            allResults.addAll(list)
+            emit(allResults.toList())
 
-    fun searchAlimentosDisponiveis(query: String) = mealDao.searchAlimentosDisponiveis(query)
+            if (list.size < pageSize) break
+            offset += pageSize
+        }
+    }
+
+    fun getAlimentosDisponiveis() = searchAlimentosDisponiveis("")
 
     fun getRecentFoods(startDate: String) = mealDao.getRecentFoods(startDate)
 
