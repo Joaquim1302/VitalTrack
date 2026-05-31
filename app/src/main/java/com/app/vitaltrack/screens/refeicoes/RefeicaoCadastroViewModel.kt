@@ -62,6 +62,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
 
         _searchQuery
             .debounce(300)
+            .distinctUntilChanged()
             .flatMapLatest { query ->
                 if (query.isBlank()) {
                     repository.getAlimentosDisponiveis()
