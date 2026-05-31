@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -43,6 +44,12 @@ fun RefeicaoCadastroScreen(
     var showCopyConfirmDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     
+    val listStateSelecionados = rememberLazyListState()
+    val listStateAlimentos = rememberLazyListState()
+    val listStateRecentes = rememberLazyListState()
+    val listStateMaisConsumidos = rememberLazyListState()
+    val listStateRefeicoesSalvas = rememberLazyListState()
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -93,7 +100,10 @@ fun RefeicaoCadastroScreen(
                 ) {
                     abas.forEach { aba ->
                         val titulo = when (aba) {
-                            AbaAdicionarAlimento.SELECIONADOS -> "Selecionados"
+                            AbaAdicionarAlimento.SELECIONADOS -> {
+                                val count = uiState.alimentosSelecionados.size
+                                if (count > 0) "Selecionados ($count)" else "Selecionados"
+                            }
                             AbaAdicionarAlimento.ALIMENTOS -> "Alimentos"
                             AbaAdicionarAlimento.RECENTES -> "Consumidos Recentemente"
                             AbaAdicionarAlimento.MAIS_CONSUMIDOS -> "Mais Consumidos"
@@ -132,7 +142,10 @@ fun RefeicaoCadastroScreen(
                                         shape = RoundedCornerShape(12.dp),
                                         border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
                                     ) {
-                                        LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
+                                        LazyColumn(
+                                            state = listStateSelecionados,
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        ) {
                                             items(uiState.alimentosSelecionados) { item ->
                                                 CurrentItemRow(
                                                     item = item,
@@ -181,6 +194,7 @@ fun RefeicaoCadastroScreen(
                                 )
 
                                 LazyColumn(
+                                    state = listStateAlimentos,
                                     verticalArrangement = Arrangement.spacedBy(12.dp),
                                     modifier = Modifier.fillMaxSize()
                                 ) {
@@ -224,6 +238,7 @@ fun RefeicaoCadastroScreen(
                             } else {
                                 val agrupados = uiState.consumidosRecentemente.groupBy { it.dsRefeicaoTp ?: "OUTROS" }
                                 LazyColumn(
+                                    state = listStateRecentes,
                                     verticalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier.fillMaxSize()
                                 ) {
@@ -252,6 +267,7 @@ fun RefeicaoCadastroScreen(
                                 EmptyMessage("Nenhum alimento consumido ainda.\nOs alimentos mais usados aparecerão aqui conforme você cadastrar refeições.")
                             } else {
                                 LazyColumn(
+                                    state = listStateMaisConsumidos,
                                     verticalArrangement = Arrangement.spacedBy(12.dp),
                                     modifier = Modifier.fillMaxSize()
                                 ) {
@@ -269,6 +285,7 @@ fun RefeicaoCadastroScreen(
                                 EmptyMessage("Nenhuma refeição salva ainda.\nMonte uma refeição e salve como modelo para reutilizar depois.")
                             } else {
                                 LazyColumn(
+                                    state = listStateRefeicoesSalvas,
                                     verticalArrangement = Arrangement.spacedBy(12.dp),
                                     modifier = Modifier.fillMaxSize()
                                 ) {
