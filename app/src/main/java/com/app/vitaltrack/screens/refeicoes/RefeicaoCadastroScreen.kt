@@ -34,6 +34,7 @@ import com.app.vitaltrack.data.entity.AlimentoEntity
 import com.app.vitaltrack.data.entity.RefeicaoFavoritaEntity
 import com.app.vitaltrack.data.entity.RefeicaoItemEntity
 import com.app.vitaltrack.ui.theme.*
+import com.app.vitaltrack.utils.normalizeSearch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +55,19 @@ fun RefeicaoCadastroScreen(
     val listStateRefeicoesSalvas = rememberLazyListState()
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val filteredAvailableFoods by remember(searchQuery, uiState.allAvailableFoods) {
+        derivedStateOf {
+            val query = searchQuery.normalizeSearch()
+            if (query.isEmpty()) {
+                uiState.allAvailableFoods
+            } else {
+                uiState.allAvailableFoods.filter { 
+                    it.dsNormalized.contains(query) 
+                }
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.init(date, typeId)
@@ -206,7 +220,7 @@ fun RefeicaoCadastroScreen(
                                     shape = RoundedCornerShape(12.dp)
                                 )
 
-                                if (uiState.availableFoods.isEmpty()) {
+                                if (filteredAvailableFoods.isEmpty()) {
                                     EmptyState(
                                         icon = Icons.Default.Search,
                                         message = "Nenhum alimento encontrado"
@@ -217,7 +231,7 @@ fun RefeicaoCadastroScreen(
                                         verticalArrangement = Arrangement.spacedBy(12.dp),
                                         modifier = Modifier.fillMaxSize()
                                     ) {
-                                        items(uiState.availableFoods) { alimento ->
+                                        items(filteredAvailableFoods) { alimento ->
                                             val isSelected = viewModel.isAlimentoSelecionado(alimento.cdAlimento)
                                             AlimentoDisponivelCard(
                                                 alimento = alimento,

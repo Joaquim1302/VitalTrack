@@ -201,8 +201,22 @@ data class AlimentoDisponivel(
     @ColumnInfo(name = "NM_CAL") val nmCal: Double?,
     @ColumnInfo(name = "NM_PROT") val nmProt: Double?,
     @ColumnInfo(name = "NM_CARB") val nmCarb: Double?,
-    @ColumnInfo(name = "NM_GORD") val nmGord: Double?
-)
+    @ColumnInfo(name = "NM_GORD") val nmGord: Double?,
+    @Ignore val dsNormalized: String = ""
+) {
+    // Construtor para Room (sem @Ignore)
+    constructor(
+        cdAlimento: Long,
+        dsAlimento: String?,
+        cdUnidade: Int?,
+        dsUnidade: String?,
+        nmQntBase: Long?,
+        nmCal: Double?,
+        nmProt: Double?,
+        nmCarb: Double?,
+        nmGord: Double?
+    ) : this(cdAlimento, dsAlimento, cdUnidade, dsUnidade, nmQntBase, nmCal, nmProt, nmCarb, nmGord, "")
+}
 
 data class RecentFood(
     @ColumnInfo(name = "DT_CONSUMO") val dtConsumo: String,

@@ -25,6 +25,7 @@ data class RefeicaoCadastroUiState(
     val mealEmoji: String = "",
     val alimentosSelecionados: List<RefeicaoItemComDescricao> = emptyList(),
     val alimentosDisponiveis: List<AlimentoDisponivel> = emptyList(),
+    val allAvailableFoods: List<AlimentoDisponivel> = emptyList(),
     val consumidosRecentemente: List<RecentFood> = emptyList(),
     val maisConsumidos: List<MostUsedFood> = emptyList(),
     val refeicoesSalvas: List<RefeicaoSalvaUi> = emptyList(),

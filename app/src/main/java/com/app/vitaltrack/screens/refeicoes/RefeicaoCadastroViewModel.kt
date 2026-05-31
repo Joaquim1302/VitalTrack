@@ -9,6 +9,7 @@ import com.app.vitaltrack.data.entity.*
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.repository.MealRepository
+import com.app.vitaltrack.utils.normalizeSearch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
@@ -66,20 +67,17 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 _uiState.update { it.copy(refeicoesSalvas = uiList) }
             }.launchIn(viewModelScope)
 
-        _searchQuery
-            .debounce(300)
-            .distinctUntilChanged()
-            .flatMapLatest { query ->
-                if (query.isBlank()) {
-                    repository.getAlimentosDisponiveis()
-                } else {
-                    repository.searchAlimentosDisponiveis(query)
+        // Carrega todos os alimentos e normaliza para busca rápida (accent-insensitive)
+        viewModelScope.launch {
+            repository.getAlimentosDisponiveis()
+                .distinctUntilChanged()
+                .collect { list ->
+                    val normalizedList = list.map { 
+                        it.copy(dsNormalized = it.dsAlimento?.normalizeSearch() ?: "") 
+                    }
+                    _uiState.update { it.copy(allAvailableFoods = normalizedList) }
                 }
-            }
-            .onEach { list ->
-                _uiState.update { it.copy(alimentosDisponiveis = list) }
-            }
-            .launchIn(viewModelScope)
+        }
     }
 
     fun init(date: String, typeId: Int) {
