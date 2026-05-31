@@ -73,11 +73,19 @@ fun RefeicaoCadastroScreen(
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(GradientTop, GradientBottom)))
     ) {
+        val totalCalories = uiState.alimentosSelecionados.sumOf { 
+            ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0) 
+        }
+
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
-                HeaderSection("${uiState.mealEmoji} ${uiState.mealName}", onBackClick)
+                HeaderSection(
+                    title = "${uiState.mealEmoji} ${uiState.mealName}",
+                    totalCalories = totalCalories.toInt(),
+                    onBackClick = onBackClick
+                )
             }
         ) { innerPadding ->
             Column(
@@ -434,7 +442,7 @@ fun RefeicaoCadastroScreen(
 }
 
 @Composable
-fun HeaderSection(title: String, onBackClick: () -> Unit) {
+fun HeaderSection(title: String, totalCalories: Int, onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -449,9 +457,26 @@ fun HeaderSection(title: String, onBackClick: () -> Unit) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = TextPrimary)
         }
         Spacer(Modifier.width(16.dp))
-        Column {
+        Column(Modifier.weight(1f)) {
             Text(title, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text("Adicionar Alimentos", color = TextSecondary, fontSize = 12.sp)
+        }
+        
+        if (totalCalories > 0) {
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "$totalCalories",
+                    color = TealLight,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+                Text(
+                    text = "kcal total",
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

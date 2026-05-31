@@ -99,6 +99,8 @@ class MealRepository(
 
     fun getRecentFoods(startDate: String) = mealDao.getRecentFoods(startDate)
 
+    fun getCaloriesPerMeal(date: String, clienteId: Long) = mealDao.getCaloriesPerMeal(date, clienteId)
+
     suspend fun saveMealAsFavorite(name: String, refeicaoTipoId: Int?, items: List<RefeicaoItemEntity>) = withContext(Dispatchers.IO) {
         val favoriteId = mealDao.insertFavorite(
             RefeicaoFavoritaEntity(dsFavorita = name, cdRefeicaoTp = refeicaoTipoId)

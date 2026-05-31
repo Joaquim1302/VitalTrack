@@ -161,7 +161,23 @@ interface MealDao {
         LIMIT :limit OFFSET :offset
     """)
     fun searchAlimentosDisponiveisPagedSync(query: String, limit: Int, offset: Int): List<AlimentoDisponivel>
+
+    @Query("""
+        SELECT 
+            i.CD_REFEICAO_TP,
+            SUM((COALESCE(i.NM_QNT, 0) / CAST(COALESCE(a.NM_QNT_BASE, 1) AS REAL)) * COALESCE(a.NM_CAL, 0)) as TOTAL_CAL
+        FROM tb_DT_refeicoes_itens i
+        INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = i.CD_ALIMENTO
+        WHERE i.DT_CONSUMO = :date AND i.CD_CLIENTE = :clienteId
+        GROUP BY i.CD_REFEICAO_TP
+    """)
+    fun getCaloriesPerMeal(date: String, clienteId: Long): Flow<List<MealCalories>>
 }
+
+data class MealCalories(
+    @ColumnInfo(name = "CD_REFEICAO_TP") val cdRefeicaoTp: Int,
+    @ColumnInfo(name = "TOTAL_CAL") val totalCal: Double
+)
 
 data class MostUsedFood(
     @ColumnInfo(name = "CD_ALIMENTO") val cdAlimento: Long,

@@ -76,7 +76,7 @@ fun DashboardScreen(
 
                 item {
                     CalorieProgressCard(
-                        consumed = viewModel.getTotalConsumed(),
+                        consumed = uiState.totalConsumed,
                         goal = uiState.calorieGoal
                     )
                 }
