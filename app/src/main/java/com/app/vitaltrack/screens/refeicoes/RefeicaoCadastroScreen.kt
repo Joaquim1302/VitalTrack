@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.util.Locale
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
 import com.app.vitaltrack.data.dao.MostUsedFood
 import com.app.vitaltrack.data.dao.RecentFood
@@ -660,8 +661,14 @@ fun AlimentoRecentCard(
                 }
                 
                 val dataFormatada = try {
-                    val data = java.time.LocalDate.parse(alimento.dtConsumo)
-                    data.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    val dateString = if (alimento.dtConsumo.contains("T")) {
+                        alimento.dtConsumo.split("T")[0]
+                    } else {
+                        alimento.dtConsumo
+                    }
+                    val data = java.time.LocalDate.parse(dateString)
+                    val formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MMM/yy", Locale.forLanguageTag("pt-BR"))
+                    data.format(formatter).replace(".", "").lowercase()
                 } catch (e: Exception) {
                     alimento.dtConsumo
                 }
@@ -728,10 +735,12 @@ fun AlimentoDisponivelCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val infoNutricional = listOfNotNull(
-                        alimento.nmCal?.let { "${it.toInt()} kcal" },
+                        alimento.nmCal?.let { "${it.toInt()} kcal" }
+                        /* REMOVIDO PARA APARECER SOMENTE AS CALORIAS
+                        ,
                         alimento.nmProt?.let { "P: ${it.toInt()}g" },
                         alimento.nmCarb?.let { "C: ${it.toInt()}g" },
-                        alimento.nmGord?.let { "G: ${it.toInt()}g" }
+                        alimento.nmGord?.let { "G: ${it.toInt()}g" }*/
                     ).joinToString("  •  ")
                     
                     Text(
@@ -807,12 +816,12 @@ fun RefeicaoSalvaCard(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
-                
+                /* REMOVIDO PARA APARECER SOMENTE AS CALORIAS
                 Text(
                     text = "P: ${template.proteinas.toInt()}g | C: ${template.carboidratos.toInt()}g | G: ${template.gorduras.toInt()}g",
                     color = TextSecondary,
                     fontSize = 12.sp
-                )
+                )*/
             }
             
             Row {
