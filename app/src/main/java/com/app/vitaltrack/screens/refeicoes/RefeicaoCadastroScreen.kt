@@ -56,14 +56,13 @@ fun RefeicaoCadastroScreen(
         viewModel.init(date, typeId)
     }
 
-    LaunchedEffect(uiState.successMessage, uiState.errorMessage) {
-        uiState.successMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessages()
-        }
-        uiState.errorMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.clearMessages()
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is RefeicaoCadastroEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
         }
     }
 

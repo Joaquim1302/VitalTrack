@@ -11,16 +11,24 @@ import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.repository.MealRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
+sealed interface RefeicaoCadastroEvent {
+    data class ShowSnackbar(val message: String) : RefeicaoCadastroEvent
+}
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: MealRepository
     private val _uiState = MutableStateFlow(RefeicaoCadastroUiState())
     val uiState: StateFlow<RefeicaoCadastroUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<RefeicaoCadastroEvent>()
+    val events: Flow<RefeicaoCadastroEvent> = _events.receiveAsFlow()
 
     private val _searchQuery = MutableStateFlow("")
 
@@ -145,10 +153,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 it.copy(
                     alimentoDisponivelSelecionado = null, 
                     alimentoRecentSelecionado = null,
-                    alimentoMaisConsumidoSelecionado = null,
-                    successMessage = "Alimento adicionado à refeição."
+                    alimentoMaisConsumidoSelecionado = null
                 ) 
             }
+            _events.send(RefeicaoCadastroEvent.ShowSnackbar("Alimento adicionado à refeição."))
         }
     }
 
@@ -167,7 +175,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 quantity,
                 unit
             )
-            _uiState.update { it.copy(alimentoParaEditar = null, successMessage = "Quantidade atualizada.") }
+            _uiState.update { it.copy(alimentoParaEditar = null) }
+            _events.send(RefeicaoCadastroEvent.ShowSnackbar("Quantidade atualizada."))
         }
     }
 
@@ -189,7 +198,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         val item = _uiState.value.alimentoParaRemover ?: return
         viewModelScope.launch {
             repository.deleteItem(_uiState.value.date, _uiState.value.typeId, item.cdAlimento)
-            _uiState.update { it.copy(alimentoParaRemover = null, successMessage = "Alimento removido.") }
+            _uiState.update { it.copy(alimentoParaRemover = null) }
+            _events.send(RefeicaoCadastroEvent.ShowSnackbar("Alimento removido."))
         }
     }
 
@@ -264,10 +274,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                     it.copy(
                         exibindoDialogNovaRefeicaoSalva = false,
                         nomeNovaRefeicaoSalva = "",
-                        salvandoNovaRefeicaoSalva = false,
-                        successMessage = "Refeição salva com sucesso."
+                        salvandoNovaRefeicaoSalva = false
                     ) 
                 }
+                _events.send(RefeicaoCadastroEvent.ShowSnackbar("Refeição salva com sucesso."))
             } catch (e: Exception) {
                 _uiState.update { 
                     it.copy(
@@ -305,10 +315,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             
             _uiState.update { 
                 it.copy(
-                    abaSelecionada = AbaAdicionarAlimento.SELECIONADOS,
-                    successMessage = "Refeição modelo adicionada."
+                    abaSelecionada = AbaAdicionarAlimento.SELECIONADOS
                 ) 
             }
+            _events.send(RefeicaoCadastroEvent.ShowSnackbar("Refeição modelo adicionada."))
         }
     }
 
