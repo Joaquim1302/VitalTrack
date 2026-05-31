@@ -39,6 +39,10 @@ data class RefeicaoCadastroUiState(
     val refeicaoSalvaSelecionadaId: Long? = null,
     val successMessage: String? = null,
     val errorMessage: String? = null,
+    val exibindoDialogNovaRefeicaoSalva: Boolean = false,
+    val nomeNovaRefeicaoSalva: String = "",
+    val erroNovaRefeicaoSalva: String? = null,
+    val salvandoNovaRefeicaoSalva: Boolean = false,
 ) {
     // Aliases para manter compatibilidade com a versão atual da tela
     val currentItems get() = alimentosSelecionados

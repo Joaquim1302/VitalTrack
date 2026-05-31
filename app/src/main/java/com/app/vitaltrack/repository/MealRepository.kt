@@ -14,7 +14,7 @@ class MealRepository(
     
     fun getFavorites(refeicaoTipoId: Int?) = mealDao.getFavorites(refeicaoTipoId)
 
-    fun listarRefeicoesSalvas() = refeicaoSalvaDao.listarRefeicoesSalvas()
+    fun listarRefeicoesSalvas() = refeicaoSalvaDao.listarRefeicoesSalvasComItens()
 
     suspend fun buscarRefeicaoSalvaComItens(id: Long) = withContext(Dispatchers.IO) {
         refeicaoSalvaDao.buscarRefeicaoSalvaComItens(id)
@@ -22,6 +22,41 @@ class MealRepository(
 
     suspend fun salvarRefeicaoCompleta(refeicao: RefeicaoSalvaEntity, itens: List<RefeicaoSalvaItemEntity>) = withContext(Dispatchers.IO) {
         refeicaoSalvaDao.salvarRefeicaoCompleta(refeicao, itens)
+    }
+
+    suspend fun salvarRefeicaoSalva(
+        nome: String,
+        refeicaoTipoId: Int?,
+        itens: List<RefeicaoItemComDescricao>
+    ) = withContext(Dispatchers.IO) {
+        val totalCal = itens.sumOf { ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0) }
+        val totalProt = itens.sumOf { ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmProt ?: 0.0) }
+        val totalCarb = itens.sumOf { ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCarb ?: 0.0) }
+        val totalGord = itens.sumOf { ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmGord ?: 0.0) }
+
+        val refeicao = RefeicaoSalvaEntity(
+            dsRefeicaoSalva = nome,
+            cdRefeicaoTp = refeicaoTipoId,
+            nmCalTotal = totalCal,
+            nmProtTotal = totalProt,
+            nmCarbTotal = totalCarb,
+            nmGordTotal = totalGord
+        )
+
+        val itensSalvos = itens.map {
+            RefeicaoSalvaItemEntity(
+                cdRefeicaoSalva = 0,
+                cdAlimento = it.cdAlimento,
+                dsAlimento = it.dsAlimento ?: "",
+                nmQtd = it.nmQnt ?: 0.0,
+                dsUnidade = it.dsUnidade ?: "g",
+                nmCal = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0),
+                nmProt = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmProt ?: 0.0),
+                nmCarb = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCarb ?: 0.0),
+                nmGord = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmGord ?: 0.0)
+            )
+        }
+        refeicaoSalvaDao.salvarRefeicaoCompleta(refeicao, itensSalvos)
     }
 
     suspend fun excluirRefeicaoSalva(id: Long) = withContext(Dispatchers.IO) {

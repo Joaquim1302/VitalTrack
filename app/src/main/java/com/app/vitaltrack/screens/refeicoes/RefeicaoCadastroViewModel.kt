@@ -40,12 +40,13 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         repository.listarRefeicoesSalvas().onEach { list ->
             val uiList = list.map {
                 RefeicaoSalvaUi(
-                    id = it.cdRefeicaoSalva,
-                    nome = it.dsRefeicaoSalva,
-                    calorias = it.nmCalTotal,
-                    proteinas = it.nmProtTotal,
-                    carboidratos = it.nmCarbTotal,
-                    gorduras = it.nmGordTotal
+                    id = it.refeicao.cdRefeicaoSalva,
+                    nome = it.refeicao.dsRefeicaoSalva,
+                    calorias = it.refeicao.nmCalTotal,
+                    proteinas = it.refeicao.nmProtTotal,
+                    carboidratos = it.refeicao.nmCarbTotal,
+                    gorduras = it.refeicao.nmGordTotal,
+                    quantidadeItens = it.itens.size
                 )
             }
             _uiState.update { it.copy(refeicoesSalvas = uiList) }
@@ -228,49 +229,59 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         }
     }
 
-    fun salvarRefeicaoAtualComoModelo(nome: String) {
-        if (nome.isBlank() || _uiState.value.alimentosSelecionados.isEmpty()) return
+    fun abrirDialogNovaRefeicaoSalva() {
+        _uiState.update { it.copy(exibindoDialogNovaRefeicaoSalva = true, nomeNovaRefeicaoSalva = "", erroNovaRefeicaoSalva = null) }
+    }
+
+    fun fecharDialogNovaRefeicaoSalva() {
+        _uiState.update { it.copy(exibindoDialogNovaRefeicaoSalva = false) }
+    }
+
+    fun atualizarNomeNovaRefeicaoSalva(nome: String) {
+        _uiState.update { it.copy(nomeNovaRefeicaoSalva = nome, erroNovaRefeicaoSalva = null) }
+    }
+
+    fun salvarNovaRefeicaoSalva() {
+        val state = _uiState.value
+        if (state.nomeNovaRefeicaoSalva.isBlank()) {
+            _uiState.update { it.copy(erroNovaRefeicaoSalva = "Informe o nome da refeição.") }
+            return
+        }
+        if (state.alimentosSelecionados.isEmpty()) {
+            _uiState.update { it.copy(erroNovaRefeicaoSalva = "Adicione pelo menos um alimento.") }
+            return
+        }
 
         viewModelScope.launch {
-            val totalCal = _uiState.value.alimentosSelecionados.sumOf { 
-                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0) 
-            }
-            val totalProt = _uiState.value.alimentosSelecionados.sumOf { 
-                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmProt ?: 0.0) 
-            }
-            val totalCarb = _uiState.value.alimentosSelecionados.sumOf { 
-                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCarb ?: 0.0) 
-            }
-            val totalGord = _uiState.value.alimentosSelecionados.sumOf { 
-                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmGord ?: 0.0) 
-            }
-
-            val refeicao = RefeicaoSalvaEntity(
-                dsRefeicaoSalva = nome,
-                cdRefeicaoTp = _uiState.value.typeId,
-                nmCalTotal = totalCal,
-                nmProtTotal = totalProt,
-                nmCarbTotal = totalCarb,
-                nmGordTotal = totalGord
-            )
-
-            val itens = _uiState.value.alimentosSelecionados.map {
-                RefeicaoSalvaItemEntity(
-                    cdRefeicaoSalva = 0, // Será preenchido pelo DAO
-                    cdAlimento = it.cdAlimento,
-                    dsAlimento = it.dsAlimento ?: "",
-                    nmQtd = it.nmQnt ?: 0.0,
-                    dsUnidade = it.dsUnidade ?: "g",
-                    nmCal = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0),
-                    nmProt = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmProt ?: 0.0),
-                    nmCarb = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCarb ?: 0.0),
-                    nmGord = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmGord ?: 0.0)
+            _uiState.update { it.copy(salvandoNovaRefeicaoSalva = true) }
+            try {
+                repository.salvarRefeicaoSalva(
+                    state.nomeNovaRefeicaoSalva,
+                    state.typeId,
+                    state.alimentosSelecionados
                 )
+                _uiState.update { 
+                    it.copy(
+                        exibindoDialogNovaRefeicaoSalva = false,
+                        nomeNovaRefeicaoSalva = "",
+                        salvandoNovaRefeicaoSalva = false,
+                        successMessage = "Refeição salva com sucesso."
+                    ) 
+                }
+            } catch (e: Exception) {
+                _uiState.update { 
+                    it.copy(
+                        salvandoNovaRefeicaoSalva = false,
+                        erroNovaRefeicaoSalva = "Erro ao salvar: ${e.message}"
+                    ) 
+                }
             }
-
-            repository.salvarRefeicaoCompleta(refeicao, itens)
-            _uiState.update { it.copy(successMessage = "Refeição salva como modelo.") }
         }
+    }
+
+    fun salvarRefeicaoAtualComoModelo(nome: String) {
+        atualizarNomeNovaRefeicaoSalva(nome)
+        salvarNovaRefeicaoSalva()
     }
 
     fun adicionarRefeicaoSalva(id: Long) {
@@ -299,6 +310,15 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 ) 
             }
         }
+    }
+
+    fun selecionarRefeicaoSalva(id: Long) {
+        _uiState.update { it.copy(refeicaoSalvaSelecionadaId = id) }
+    }
+
+    fun adicionarRefeicaoSalvaSelecionada() {
+        val id = _uiState.value.refeicaoSalvaSelecionadaId ?: return
+        adicionarRefeicaoSalva(id)
     }
 
     fun excluirRefeicaoSalva(id: Long) {

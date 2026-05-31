@@ -40,7 +40,6 @@ fun RefeicaoCadastroScreen(
     viewModel: RefeicaoCadastroViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showFavoriteDialog by remember { mutableStateOf(false) }
     var showCopyConfirmDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     
@@ -145,7 +144,7 @@ fun RefeicaoCadastroScreen(
                                     }
 
                                     Button(
-                                        onClick = { showFavoriteDialog = true },
+                                        onClick = { viewModel.abrirDialogNovaRefeicaoSalva() },
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = TealLight.copy(alpha = 0.8f),
@@ -155,7 +154,7 @@ fun RefeicaoCadastroScreen(
                                     ) {
                                         Icon(Icons.Default.Save, contentDescription = null)
                                         Spacer(Modifier.width(8.dp))
-                                        Text("Salvar refeição como modelo", fontWeight = FontWeight.Bold)
+                                        Text("Nova Refeição Salva", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -276,6 +275,8 @@ fun RefeicaoCadastroScreen(
                                     items(uiState.refeicoesSalvas) { template ->
                                         RefeicaoSalvaCard(
                                             template = template,
+                                            isSelected = uiState.refeicaoSalvaSelecionadaId == template.id,
+                                            onClick = { viewModel.selecionarRefeicaoSalva(template.id) },
                                             onAdd = { viewModel.adicionarRefeicaoSalva(template.id) },
                                             onDelete = { viewModel.excluirRefeicaoSalva(template.id) }
                                         )
@@ -311,13 +312,14 @@ fun RefeicaoCadastroScreen(
             )
         }
 
-        if (showFavoriteDialog) {
-            SaveFavoriteDialog(
-                onDismiss = { showFavoriteDialog = false },
-                onConfirm = { name ->
-                    viewModel.salvarRefeicaoAtualComoModelo(name)
-                    showFavoriteDialog = false
-                }
+        if (uiState.exibindoDialogNovaRefeicaoSalva) {
+            SaveMealDialog(
+                name = uiState.nomeNovaRefeicaoSalva,
+                onNameChange = { viewModel.atualizarNomeNovaRefeicaoSalva(it) },
+                error = uiState.erroNovaRefeicaoSalva,
+                isSaving = uiState.salvandoNovaRefeicaoSalva,
+                onDismiss = { viewModel.fecharDialogNovaRefeicaoSalva() },
+                onConfirm = { viewModel.salvarNovaRefeicaoSalva() }
             )
         }
 
@@ -694,14 +696,23 @@ fun MostUsedCard(food: MostUsedFood, onAdd: () -> Unit) {
 @Composable
 fun RefeicaoSalvaCard(
     template: RefeicaoSalvaUi,
+    isSelected: Boolean,
+    onClick: () -> Unit,
     onAdd: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) TealLight.copy(alpha = 0.15f) else CardBackground
+        ),
         shape = RoundedCornerShape(12.dp),
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, CardBorder)
+        border = androidx.compose.foundation.BorderStroke(
+            if (isSelected) 1.dp else 0.5.dp, 
+            if (isSelected) TealLight else CardBorder
+        )
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -716,7 +727,7 @@ fun RefeicaoSalvaCard(
                 )
                 
                 Text(
-                    text = "${template.calorias.toInt()} kcal",
+                    text = "${template.calorias.toInt()} kcal • ${template.quantidadeItens} alimentos",
                     color = TealLight,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -762,30 +773,55 @@ fun FavoriteMealCard(favorite: RefeicaoFavoritaEntity, onImport: () -> Unit) {
 }
 
 @Composable
-fun SaveFavoriteDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var name by remember { mutableStateOf("") }
+fun SaveMealDialog(
+    name: String,
+    onNameChange: (String) -> Unit,
+    error: String?,
+    isSaving: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Salvar Favorita") },
+        title = { Text("Nova Refeição Salva") },
         text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Nome da refeição") },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = onNameChange,
+                    label = { Text("Nome da refeição") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = error != null,
+                    enabled = !isSaving,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary
+                    )
                 )
-            )
+                if (error != null) {
+                    Text(
+                        text = error,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
         },
         confirmButton = {
-            TextButton(onClick = { if (name.isNotBlank()) onConfirm(name) }) {
-                Text("Salvar", color = TealLight)
+            TextButton(
+                onClick = onConfirm,
+                enabled = !isSaving
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp), color = TealLight)
+                } else {
+                    Text("Salvar", color = TealLight)
+                }
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismiss, enabled = !isSaving) {
                 Text("Cancelar", color = TextSecondary)
             }
         },

@@ -19,6 +19,10 @@ abstract class RefeicaoSalvaDao {
     abstract fun listarRefeicoesSalvas(): Flow<List<RefeicaoSalvaEntity>>
 
     @Transaction
+    @Query("SELECT * FROM tb_DT_refeicoes_salvas ORDER BY DT_ATUALIZACAO DESC, DT_CRIACAO DESC")
+    abstract fun listarRefeicoesSalvasComItens(): Flow<List<RefeicaoSalvaComItens>>
+
+    @Transaction
     @Query("SELECT * FROM tb_DT_refeicoes_salvas WHERE CD_REFEICAO_SALVA = :cdRefeicaoSalva")
     abstract fun buscarRefeicaoSalvaComItens(cdRefeicaoSalva: Long): RefeicaoSalvaComItens?
 
