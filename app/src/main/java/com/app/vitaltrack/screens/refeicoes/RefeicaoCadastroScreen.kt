@@ -126,20 +126,36 @@ fun RefeicaoCadastroScreen(
                             if (uiState.alimentosSelecionados.isEmpty()) {
                                 EmptyMessage("Nenhum alimento selecionado.\nAdicione alimentos pela aba Alimentos.")
                             } else {
-                                Card(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = CardBackground),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
-                                ) {
-                                    LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
-                                        items(uiState.alimentosSelecionados) { item ->
-                                            CurrentItemRow(
-                                                item = item,
-                                                onDelete = { viewModel.solicitarRemocaoAlimento(item) },
-                                                onEdit = { viewModel.selecionarAlimentoParaEditar(item) }
-                                            )
+                                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    Card(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = CardDefaults.cardColors(containerColor = CardBackground),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
+                                    ) {
+                                        LazyColumn(modifier = Modifier.padding(vertical = 4.dp)) {
+                                            items(uiState.alimentosSelecionados) { item ->
+                                                CurrentItemRow(
+                                                    item = item,
+                                                    onDelete = { viewModel.solicitarRemocaoAlimento(item) },
+                                                    onEdit = { viewModel.selecionarAlimentoParaEditar(item) }
+                                                )
+                                            }
                                         }
+                                    }
+
+                                    Button(
+                                        onClick = { showFavoriteDialog = true },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = TealLight.copy(alpha = 0.8f),
+                                            contentColor = TextPrimary
+                                        ),
+                                        shape = RoundedCornerShape(12.dp)
+                                    ) {
+                                        Icon(Icons.Default.Save, contentDescription = null)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("Salvar refeição como modelo", fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -249,7 +265,24 @@ fun RefeicaoCadastroScreen(
                                 }
                             }
                         }
-                        AbaAdicionarAlimento.REFEICOES_SALVAS -> Text("Aba Refeições Salvas", color = TextPrimary)
+                        AbaAdicionarAlimento.REFEICOES_SALVAS -> {
+                            if (uiState.refeicoesSalvas.isEmpty()) {
+                                EmptyMessage("Nenhuma refeição salva ainda.\nMonte uma refeição e salve como modelo para reutilizar depois.")
+                            } else {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(uiState.refeicoesSalvas) { template ->
+                                        RefeicaoSalvaCard(
+                                            template = template,
+                                            onAdd = { viewModel.adicionarRefeicaoSalva(template.id) },
+                                            onDelete = { viewModel.excluirRefeicaoSalva(template.id) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -282,7 +315,7 @@ fun RefeicaoCadastroScreen(
             SaveFavoriteDialog(
                 onDismiss = { showFavoriteDialog = false },
                 onConfirm = { name ->
-                    viewModel.saveAsFavorite(name)
+                    viewModel.salvarRefeicaoAtualComoModelo(name)
                     showFavoriteDialog = false
                 }
             )
@@ -654,6 +687,60 @@ fun MostUsedCard(food: MostUsedFood, onAdd: () -> Unit) {
                 Text("${food.totalUsos} usos", color = TextSecondary, fontSize = 12.sp)
             }
             Icon(Icons.Default.AddCircle, contentDescription = null, tint = TealLight)
+        }
+    }
+}
+
+@Composable
+fun RefeicaoSalvaCard(
+    template: RefeicaoSalvaUi,
+    onAdd: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, CardBorder)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = template.nome,
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                
+                Text(
+                    text = "${template.calorias.toInt()} kcal",
+                    color = TealLight,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
+                
+                Text(
+                    text = "P: ${template.proteinas.toInt()}g | C: ${template.carboidratos.toInt()}g | G: ${template.gorduras.toInt()}g",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
+            
+            Row {
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Excluir", tint = Color.Red.copy(alpha = 0.6f))
+                }
+                
+                FilledIconButton(
+                    onClick = onAdd,
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = TealLight)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Adicionar", tint = TextPrimary)
+                }
+            }
         }
     }
 }

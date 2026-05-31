@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.app.vitaltrack.data.dao.ImportDao
 import com.app.vitaltrack.data.dao.MealDao
+import com.app.vitaltrack.data.dao.RefeicaoSalvaDao
 import com.app.vitaltrack.data.entity.*
 
 @Database(
@@ -15,14 +16,17 @@ import com.app.vitaltrack.data.entity.*
         RefeicaoItemEntity::class,
         UnidadeEntity::class,
         RefeicaoFavoritaEntity::class,
-        RefeicaoFavoritaItemEntity::class
+        RefeicaoFavoritaItemEntity::class,
+        RefeicaoSalvaEntity::class,
+        RefeicaoSalvaItemEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun importDao(): ImportDao
     abstract fun mealDao(): MealDao
+    abstract fun refeicaoSalvaDao(): RefeicaoSalvaDao
 
     companion object {
         @Volatile

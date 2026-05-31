@@ -4,10 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
-import com.app.vitaltrack.data.dao.MostUsedFood
-import com.app.vitaltrack.data.dao.RecentFood
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
-import com.app.vitaltrack.data.entity.RefeicaoItemEntity
+import com.app.vitaltrack.data.entity.*
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.repository.MealRepository
@@ -28,7 +26,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
 
     init {
         val db = AppDatabase.getDatabase(application)
-        repository = MealRepository(db.mealDao())
+        repository = MealRepository(db.mealDao(), db.refeicaoSalvaDao())
         
         repository.getMostUsedFoods().onEach { list ->
             _uiState.update { it.copy(maisConsumidos = list) }
@@ -37,6 +35,20 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         val thirtyDaysAgo = LocalDate.now().minusDays(30).format(DateTimeFormatter.ISO_LOCAL_DATE)
         repository.getRecentFoods(thirtyDaysAgo).onEach { list ->
             _uiState.update { it.copy(consumidosRecentemente = list) }
+        }.launchIn(viewModelScope)
+
+        repository.listarRefeicoesSalvas().onEach { list ->
+            val uiList = list.map {
+                RefeicaoSalvaUi(
+                    id = it.cdRefeicaoSalva,
+                    nome = it.dsRefeicaoSalva,
+                    calorias = it.nmCalTotal,
+                    proteinas = it.nmProtTotal,
+                    carboidratos = it.nmCarbTotal,
+                    gorduras = it.nmGordTotal
+                )
+            }
+            _uiState.update { it.copy(refeicoesSalvas = uiList) }
         }.launchIn(viewModelScope)
 
         _searchQuery
@@ -65,7 +77,7 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         }.launchIn(viewModelScope)
 
         repository.getFavorites(typeId).onEach { list ->
-            _uiState.update { it.copy(refeicoesSalvas = list) }
+            _uiState.update { it.copy(refeicoesFavoritas = list) }
         }.launchIn(viewModelScope)
     }
 
@@ -87,11 +99,11 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _uiState.update { it.copy(alimentoDisponivelSelecionado = alimento) }
     }
 
-    fun selecionarAlimentoRecentParaAdicionar(alimento: RecentFood) {
+    fun selecionarAlimentoRecentParaAdicionar(alimento: com.app.vitaltrack.data.dao.RecentFood) {
         _uiState.update { it.copy(alimentoRecentSelecionado = alimento) }
     }
 
-    fun selecionarAlimentoMaisConsumidoParaAdicionar(food: MostUsedFood) {
+    fun selecionarAlimentoMaisConsumidoParaAdicionar(food: com.app.vitaltrack.data.dao.MostUsedFood) {
         _uiState.update { it.copy(alimentoMaisConsumidoSelecionado = food) }
     }
 
@@ -213,6 +225,86 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             } else {
                 _uiState.update { it.copy(errorMessage = "Nenhuma refeição anterior encontrada.") }
             }
+        }
+    }
+
+    fun salvarRefeicaoAtualComoModelo(nome: String) {
+        if (nome.isBlank() || _uiState.value.alimentosSelecionados.isEmpty()) return
+
+        viewModelScope.launch {
+            val totalCal = _uiState.value.alimentosSelecionados.sumOf { 
+                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0) 
+            }
+            val totalProt = _uiState.value.alimentosSelecionados.sumOf { 
+                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmProt ?: 0.0) 
+            }
+            val totalCarb = _uiState.value.alimentosSelecionados.sumOf { 
+                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCarb ?: 0.0) 
+            }
+            val totalGord = _uiState.value.alimentosSelecionados.sumOf { 
+                ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmGord ?: 0.0) 
+            }
+
+            val refeicao = RefeicaoSalvaEntity(
+                dsRefeicaoSalva = nome,
+                cdRefeicaoTp = _uiState.value.typeId,
+                nmCalTotal = totalCal,
+                nmProtTotal = totalProt,
+                nmCarbTotal = totalCarb,
+                nmGordTotal = totalGord
+            )
+
+            val itens = _uiState.value.alimentosSelecionados.map {
+                RefeicaoSalvaItemEntity(
+                    cdRefeicaoSalva = 0, // Será preenchido pelo DAO
+                    cdAlimento = it.cdAlimento,
+                    dsAlimento = it.dsAlimento ?: "",
+                    nmQtd = it.nmQnt ?: 0.0,
+                    dsUnidade = it.dsUnidade ?: "g",
+                    nmCal = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0),
+                    nmProt = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmProt ?: 0.0),
+                    nmCarb = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCarb ?: 0.0),
+                    nmGord = ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmGord ?: 0.0)
+                )
+            }
+
+            repository.salvarRefeicaoCompleta(refeicao, itens)
+            _uiState.update { it.copy(successMessage = "Refeição salva como modelo.") }
+        }
+    }
+
+    fun adicionarRefeicaoSalva(id: Long) {
+        viewModelScope.launch {
+            val salvaComItens = repository.buscarRefeicaoSalvaComItens(id) ?: return@launch
+            
+            val novosItens = salvaComItens.itens.map { itemSalvo ->
+                RefeicaoItemEntity(
+                    dtConsumo = _uiState.value.date,
+                    cdAlimento = itemSalvo.cdAlimento,
+                    cdCliente = 1, // Mock
+                    cdFase = 1,
+                    cdRefeicaoTp = _uiState.value.typeId,
+                    nmQnt = itemSalvo.nmQtd,
+                    dsUnidade = itemSalvo.dsUnidade
+                )
+            }
+            
+            // Gravar itens no banco de dados real
+            repository.insertMealItems(novosItens)
+            
+            _uiState.update { 
+                it.copy(
+                    abaSelecionada = AbaAdicionarAlimento.SELECIONADOS,
+                    successMessage = "Refeição modelo adicionada."
+                ) 
+            }
+        }
+    }
+
+    fun excluirRefeicaoSalva(id: Long) {
+        viewModelScope.launch {
+            repository.excluirRefeicaoSalva(id)
+            _uiState.update { it.copy(successMessage = "Modelo excluído.") }
         }
     }
 

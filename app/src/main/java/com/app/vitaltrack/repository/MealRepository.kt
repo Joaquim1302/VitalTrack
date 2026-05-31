@@ -1,17 +1,36 @@
 package com.app.vitaltrack.repository
 
-import com.app.vitaltrack.data.dao.AlimentoDisponivel
-import com.app.vitaltrack.data.dao.MealDao
-import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
+import com.app.vitaltrack.data.dao.*
 import com.app.vitaltrack.data.entity.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-class MealRepository(private val mealDao: MealDao) {
+class MealRepository(
+    private val mealDao: MealDao,
+    private val refeicaoSalvaDao: RefeicaoSalvaDao
+) {
     
     fun getMostUsedFoods() = mealDao.getMostUsedFoods()
     
     fun getFavorites(refeicaoTipoId: Int?) = mealDao.getFavorites(refeicaoTipoId)
+
+    fun listarRefeicoesSalvas() = refeicaoSalvaDao.listarRefeicoesSalvas()
+
+    suspend fun buscarRefeicaoSalvaComItens(id: Long) = withContext(Dispatchers.IO) {
+        refeicaoSalvaDao.buscarRefeicaoSalvaComItens(id)
+    }
+
+    suspend fun salvarRefeicaoCompleta(refeicao: RefeicaoSalvaEntity, itens: List<RefeicaoSalvaItemEntity>) = withContext(Dispatchers.IO) {
+        refeicaoSalvaDao.salvarRefeicaoCompleta(refeicao, itens)
+    }
+
+    suspend fun excluirRefeicaoSalva(id: Long) = withContext(Dispatchers.IO) {
+        refeicaoSalvaDao.excluirRefeicaoSalva(id)
+    }
+
+    suspend fun insertMealItems(items: List<RefeicaoItemEntity>) = withContext(Dispatchers.IO) {
+        mealDao.insertMealItems(items)
+    }
     
     fun getItemsForMeal(date: String, refeicaoTipoId: Int) = mealDao.getItemsForMeal(date, refeicaoTipoId)
 
