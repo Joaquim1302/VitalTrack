@@ -91,8 +91,18 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         _uiState.update { it.copy(alimentoRecentSelecionado = alimento) }
     }
 
+    fun selecionarAlimentoMaisConsumidoParaAdicionar(food: MostUsedFood) {
+        _uiState.update { it.copy(alimentoMaisConsumidoSelecionado = food) }
+    }
+
     fun cancelarAdicaoAlimento() {
-        _uiState.update { it.copy(alimentoDisponivelSelecionado = null, alimentoRecentSelecionado = null) }
+        _uiState.update { 
+            it.copy(
+                alimentoDisponivelSelecionado = null, 
+                alimentoRecentSelecionado = null,
+                alimentoMaisConsumidoSelecionado = null
+            ) 
+        }
     }
 
     fun selecionarAlimentoParaEditar(item: RefeicaoItemComDescricao) {
@@ -118,7 +128,14 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 quantity,
                 unit
             )
-            _uiState.update { it.copy(alimentoDisponivelSelecionado = null, alimentoRecentSelecionado = null, successMessage = "Alimento adicionado à refeição.") }
+            _uiState.update { 
+                it.copy(
+                    alimentoDisponivelSelecionado = null, 
+                    alimentoRecentSelecionado = null,
+                    alimentoMaisConsumidoSelecionado = null,
+                    successMessage = "Alimento adicionado à refeição."
+                ) 
+            }
         }
     }
 

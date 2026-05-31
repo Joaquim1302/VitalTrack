@@ -12,13 +12,27 @@ interface MealDao {
             a.DS_ALIMENTO,
             a.CD_UNIDADE,
             u.DS_UNIDADE,
+            a.NM_QNT_BASE,
+            a.NM_CAL,
+            a.NM_PROT,
+            a.NM_CARB,
+            a.NM_GORD,
             COUNT(*) AS TOTAL_USOS
-        FROM tb_DT_refeicoes_itens r
-        INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = r.CD_ALIMENTO
+        FROM tb_DT_refeicoes_itens i
+        INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = i.CD_ALIMENTO
         LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
-        GROUP BY a.CD_ALIMENTO, a.DS_ALIMENTO, a.CD_UNIDADE, u.DS_UNIDADE
+        GROUP BY 
+            a.CD_ALIMENTO,
+            a.DS_ALIMENTO,
+            a.CD_UNIDADE,
+            u.DS_UNIDADE,
+            a.NM_QNT_BASE,
+            a.NM_CAL,
+            a.NM_PROT,
+            a.NM_CARB,
+            a.NM_GORD
         ORDER BY TOTAL_USOS DESC
-        LIMIT 10
+        LIMIT 50
     """)
     fun getMostUsedFoods(): Flow<List<MostUsedFood>>
 
@@ -152,6 +166,11 @@ data class MostUsedFood(
     @ColumnInfo(name = "DS_ALIMENTO") val dsAlimento: String?,
     @ColumnInfo(name = "CD_UNIDADE") val cdUnidade: Int?,
     @ColumnInfo(name = "DS_UNIDADE") val dsUnidade: String?,
+    @ColumnInfo(name = "NM_QNT_BASE") val nmQntBase: Long?,
+    @ColumnInfo(name = "NM_CAL") val nmCal: Double?,
+    @ColumnInfo(name = "NM_PROT") val nmProt: Double?,
+    @ColumnInfo(name = "NM_CARB") val nmCarb: Double?,
+    @ColumnInfo(name = "NM_GORD") val nmGord: Double?,
     @ColumnInfo(name = "TOTAL_USOS") val totalUsos: Int
 )
 

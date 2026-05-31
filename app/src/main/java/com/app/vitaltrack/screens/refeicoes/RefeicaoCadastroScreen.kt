@@ -7,9 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,11 +19,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
+import com.app.vitaltrack.data.dao.MostUsedFood
 import com.app.vitaltrack.data.dao.RecentFood
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.AlimentoEntity
@@ -232,7 +232,23 @@ fun RefeicaoCadastroScreen(
                                 }
                             }
                         }
-                        AbaAdicionarAlimento.MAIS_CONSUMIDOS -> Text("Aba Mais Consumidos", color = TextPrimary)
+                        AbaAdicionarAlimento.MAIS_CONSUMIDOS -> {
+                            if (uiState.maisConsumidos.isEmpty()) {
+                                EmptyMessage("Nenhum alimento consumido ainda.\nOs alimentos mais usados aparecerão aqui conforme você cadastrar refeições.")
+                            } else {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(uiState.maisConsumidos) { food ->
+                                        MostUsedFoodCard(
+                                            food = food,
+                                            onSelect = { viewModel.selecionarAlimentoMaisConsumidoParaAdicionar(food) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         AbaAdicionarAlimento.REFEICOES_SALVAS -> Text("Aba Refeições Salvas", color = TextPrimary)
                     }
                 }
@@ -298,6 +314,22 @@ fun RefeicaoCadastroScreen(
                 initialQuantity = alimento.nmQnt ?: 100.0,
                 initialUnit = alimento.dsUnidade ?: "g",
                 onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
+                onCancelar = { viewModel.cancelarAdicaoAlimento() }
+            )
+        }
+
+        if (uiState.alimentoMaisConsumidoSelecionado != null) {
+            val food = uiState.alimentoMaisConsumidoSelecionado!!
+            FoodQuantityDialog(
+                alimentoNome = food.dsAlimento ?: "",
+                baseCalories = food.nmCal ?: 0.0,
+                baseProt = food.nmProt ?: 0.0,
+                baseCarb = food.nmCarb ?: 0.0,
+                baseGord = food.nmGord ?: 0.0,
+                baseQuantity = food.nmQntBase?.toDouble() ?: 100.0,
+                initialQuantity = food.nmQntBase?.toDouble() ?: 100.0,
+                initialUnit = food.dsUnidade ?: "g",
+                onSalvar = { qty, unit -> viewModel.addItem(food.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
         }
@@ -436,6 +468,55 @@ fun CurrentItemRow(
 }
 
 @Composable
+fun MostUsedFoodCard(
+    food: MostUsedFood,
+    onSelect: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() },
+        colors = CardDefaults.cardColors(containerColor = CardBackground),
+        shape = RoundedCornerShape(12.dp),
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, CardBorder)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = food.dsAlimento ?: "",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                
+                Text(
+                    text = "${food.nmCal?.toInt() ?: 0} kcal / ${food.nmQntBase ?: 100} ${food.dsUnidade ?: ""}",
+                    color = TextSecondary,
+                    fontSize = 13.sp
+                )
+                
+                Text(
+                    text = "Usado ${food.totalUsos} vezes",
+                    color = TealLight,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 11.sp
+                )
+            }
+            
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                contentDescription = null,
+                tint = TealLight,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
+@Composable
 fun AlimentoRecentCard(
     alimento: RecentFood,
     onSelect: () -> Unit
@@ -561,7 +642,7 @@ fun AlimentoDisponivelCard(
 }
 
 @Composable
-fun MostUsedCard(food: com.app.vitaltrack.data.dao.MostUsedFood, onAdd: () -> Unit) {
+fun MostUsedCard(food: MostUsedFood, onAdd: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onAdd() },
         colors = CardDefaults.cardColors(containerColor = CardBackground),
