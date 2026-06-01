@@ -2,6 +2,7 @@ package com.app.vitaltrack.ui.widgets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -19,13 +20,15 @@ import com.app.vitaltrack.ui.theme.*
 fun RecommendedFeatureCard(
     title: String,
     icon: ImageVector,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(CardBackground)
             .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .padding(12.dp)
     ) {
         Column(

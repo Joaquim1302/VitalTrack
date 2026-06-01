@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.WaterDrop
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.MealRepository
@@ -25,7 +26,7 @@ data class DashboardUiState(
     val totalConsumed: Double = 0.0,
     val recommendedFeatures: List<RecommendedFeature> = listOf(
         RecommendedFeature("Lembrete de hidratação", Icons.Default.WaterDrop),
-        RecommendedFeature("Contador de passos", Icons.AutoMirrored.Filled.DirectionsRun),
+        RecommendedFeature("Exportar para Access", Icons.Default.Upload),
         RecommendedFeature("Relatório semanal", Icons.AutoMirrored.Filled.ShowChart),
         RecommendedFeature("Alertas de meta", Icons.Default.Notifications)
     ),
