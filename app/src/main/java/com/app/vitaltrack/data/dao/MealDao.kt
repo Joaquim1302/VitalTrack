@@ -180,6 +180,7 @@ interface MealDao {
             i.CD_REFEICAO_TP,
             i.CD_ALIMENTO,
             i.CD_CLIENTE,
+            i.CD_REFEICAO_ITEM_APP,
             i.NM_QNT,
             (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_CAL as NM_CAL,
             (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_PROT as NM_PROT,
@@ -189,6 +190,18 @@ interface MealDao {
         INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = i.CD_ALIMENTO
     """)
     suspend fun exportarRefeicoes(): @JvmSuppressWildcards List<ExportRefeicaoItemDto>
+
+    @Query("SELECT * FROM tb_DT_alimentos")
+    suspend fun getAllAlimentos(): List<AlimentoEntity>
+
+    @Query("SELECT * FROM tb_DT_unidades")
+    suspend fun getAllUnidades(): List<UnidadeEntity>
+
+    @Query("SELECT * FROM tb_DT_refeicoes_tipos")
+    suspend fun getAllRefeicaoTipos(): List<RefeicaoTipoEntity>
+
+    @Query("SELECT * FROM tb_DT_clientes")
+    suspend fun getAllClientes(): List<ClienteEntity>
 }
 
 data class MealCalories(

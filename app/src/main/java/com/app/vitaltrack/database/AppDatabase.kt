@@ -22,7 +22,7 @@ import com.app.vitaltrack.data.entity.*
         RefeicaoSalvaItemEntity::class,
         ClienteEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -35,6 +35,12 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tb_DT_refeicoes_itens ADD COLUMN CD_REFEICAO_ITEM_APP INTEGER DEFAULT 0")
+            }
+        }
 
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -87,7 +93,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "vitaltrack_database"
                 )
-                    .addMigrations(MIGRATION_4_5)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
+                    .fallbackToDestructiveMigration() // Adicionado como segurança se faltar alguma migração intermediária
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
