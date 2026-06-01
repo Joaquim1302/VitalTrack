@@ -1,10 +1,7 @@
 package com.app.vitaltrack.repository
 
 import com.app.vitaltrack.data.dao.ImportDao
-import com.app.vitaltrack.data.entity.AlimentoEntity
-import com.app.vitaltrack.data.entity.RefeicaoItemEntity
-import com.app.vitaltrack.data.entity.RefeicaoTipoEntity
-import com.app.vitaltrack.data.entity.UnidadeEntity
+import com.app.vitaltrack.data.entity.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -23,5 +20,9 @@ class ImportRepository(private val importDao: ImportDao) {
     
     suspend fun importUnidades(unidades: List<UnidadeEntity>) = withContext(Dispatchers.IO) {
         importDao.insertUnidades(unidades)
+    }
+
+    suspend fun importClientes(clientes: List<ClienteEntity>) = withContext(Dispatchers.IO) {
+        importDao.insertClientes(clientes)
     }
 }
