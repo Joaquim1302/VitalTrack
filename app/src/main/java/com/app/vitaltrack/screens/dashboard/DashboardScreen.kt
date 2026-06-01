@@ -29,6 +29,7 @@ import com.app.vitaltrack.ui.widgets.*
 fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
     onNavigateToMealRegistration: (String, Int) -> Unit,
+    onNavigateToExport: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -121,7 +122,8 @@ fun DashboardScreen(
                             RecommendedFeatureCard(
                                 title = uiState.recommendedFeatures[1].title,
                                 icon = uiState.recommendedFeatures[1].icon,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                onClick = onNavigateToExport
                             )
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

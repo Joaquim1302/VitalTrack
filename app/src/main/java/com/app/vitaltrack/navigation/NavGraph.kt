@@ -23,6 +23,9 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onNavigateToMealRegistration = { date, typeId ->
                     navController.navigate(Screen.MealRegistration.createRoute(date, typeId))
+                },
+                onNavigateToExport = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }

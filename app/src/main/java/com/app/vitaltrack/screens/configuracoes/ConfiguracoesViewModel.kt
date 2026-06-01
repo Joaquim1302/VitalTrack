@@ -3,6 +3,7 @@ package com.app.vitaltrack.screens.configuracoes
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.app.vitaltrack.database.AppDatabase
@@ -83,9 +84,10 @@ class ConfiguracoesViewModel(application: Application) : AndroidViewModel(applic
                         writer.write(jsonString)
                     }
                 }
-                _exportState.value = ExportState.Success("Arquivo exportado com sucesso!")
+                _exportState.value = ExportState.Success("Exportação concluída com sucesso.\nArquivo: vitaltrack_export.json")
             } catch (e: Exception) {
-                _exportState.value = ExportState.Error("Erro na exportação: ${e.message}")
+                Log.e("ConfiguracoesViewModel", "Falha ao exportar os dados", e)
+                _exportState.value = ExportState.Error("Falha ao exportar os dados.")
             }
         }
     }
