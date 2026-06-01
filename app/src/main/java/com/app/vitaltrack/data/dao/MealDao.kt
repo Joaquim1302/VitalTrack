@@ -188,6 +188,7 @@ interface MealDao {
             (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_GORD as NM_GORD
         FROM tb_DT_refeicoes_itens i
         INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = i.CD_ALIMENTO
+        WHERE i.CD_REFEICAO_ITEM_APP = 1
     """)
     suspend fun exportarRefeicoes(): @JvmSuppressWildcards List<ExportRefeicaoItemDto>
 
