@@ -10,7 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,22 +34,42 @@ fun ConfiguracoesScreen(
 ) {
     val context = LocalContext.current
     val importState by viewModel.importState.collectAsState()
+    val exportState by viewModel.exportState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val launcher = rememberLauncherForActivityResult(
+    val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri: Uri? ->
             uri?.let { viewModel.importJson(context, it) }
         }
     )
 
-    LaunchedEffect(importState) {
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json"),
+        onResult = { uri: Uri? ->
+            uri?.let { viewModel.exportJson(context, it) }
+        }
+    )
+
+    LaunchedEffect(importState, exportState) {
         when (val state = importState) {
             is ImportState.Success -> {
                 snackbarHostState.showSnackbar(state.message)
                 viewModel.resetState()
             }
             is ImportState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> {}
+        }
+
+        when (val state = exportState) {
+            is ExportState.Success -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            is ExportState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 viewModel.resetState()
             }
@@ -93,7 +113,16 @@ fun ConfiguracoesScreen(
                     ImportCard(
                         isLoading = importState is ImportState.Loading,
                         onImportClick = {
-                            launcher.launch(arrayOf("application/json", "text/*"))
+                            importLauncher.launch(arrayOf("application/json", "text/*"))
+                        }
+                    )
+                }
+
+                item {
+                    ExportCard(
+                        isLoading = exportState is ExportState.Loading,
+                        onExportClick = {
+                            exportLauncher.launch("vitaltrack_export.json")
                         }
                     )
                 }
@@ -119,7 +148,7 @@ fun ConfiguracoesHeader(onBackClick: () -> Unit) {
                 .background(CardBackground)
         ) {
             Icon(
-                imageVector = Icons.Default.ArrowBack,
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Voltar",
                 tint = TextPrimary
             )
@@ -135,7 +164,7 @@ fun ConfiguracoesHeader(onBackClick: () -> Unit) {
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Gerencie seus dados e preferências.",
+                text = "Gerencie seus dados e preferences.",
                 color = TextSecondary,
                 fontSize = 12.sp
             )
@@ -200,6 +229,69 @@ fun ImportCard(
                     Icon(Icons.Default.FileUpload, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Importar JSON", fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ExportCard(
+    isLoading: Boolean,
+    onExportClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(CardBackground)
+            .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
+            .padding(20.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "Exportação de dados",
+                color = TextPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Exporte todos os seus registros de refeições em formato JSON para backup ou uso externo.",
+                color = TextSecondary,
+                fontSize = 14.sp,
+                lineHeight = 20.sp
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            Button(
+                onClick = onExportClick,
+                enabled = !isLoading,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TealLight,
+                    contentColor = TextPrimary,
+                    disabledContainerColor = TealLight.copy(alpha = 0.5f),
+                    disabledContentColor = TextPrimary.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(12.dp)
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = TextPrimary,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Exportando dados...", fontWeight = FontWeight.Bold)
+                } else {
+                    Icon(Icons.Default.FileUpload, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Exportar JSON", fontWeight = FontWeight.Bold)
                 }
             }
         }

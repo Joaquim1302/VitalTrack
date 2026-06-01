@@ -173,6 +173,22 @@ interface MealDao {
         GROUP BY i.CD_REFEICAO_TP
     """)
     fun getCaloriesPerMeal(date: String, clienteId: Long): Flow<List<MealCalories>>
+
+    @Query("""
+        SELECT 
+            i.DT_CONSUMO || ' 00:00:00' as DT_CONSUMO,
+            i.CD_REFEICAO_TP,
+            i.CD_ALIMENTO,
+            i.CD_CLIENTE,
+            i.NM_QNT,
+            (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_CAL as NM_CAL,
+            (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_PROT as NM_PROT,
+            (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_CARB as NM_CARB,
+            (i.NM_QNT / CAST(a.NM_QNT_BASE AS REAL)) * a.NM_GORD as NM_GORD
+        FROM tb_DT_refeicoes_itens i
+        INNER JOIN tb_DT_alimentos a ON a.CD_ALIMENTO = i.CD_ALIMENTO
+    """)
+    suspend fun exportarRefeicoes(): @JvmSuppressWildcards List<ExportRefeicaoItemDto>
 }
 
 data class MealCalories(

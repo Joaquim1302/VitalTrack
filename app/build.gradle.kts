@@ -7,16 +7,12 @@ plugins {
 
 android {
     namespace = "com.app.vitaltrack"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.app.vitaltrack"
         minSdk = 29
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -39,6 +35,10 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+ksp {
+    arg("room.generateKotlin", "true")
 }
 
 dependencies {
