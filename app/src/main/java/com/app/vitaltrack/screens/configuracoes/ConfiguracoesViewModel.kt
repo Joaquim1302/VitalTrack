@@ -38,7 +38,7 @@ class ConfiguracoesViewModel(application: Application) : AndroidViewModel(applic
 
     init {
         val db = AppDatabase.getDatabase(application)
-        repository = ImportRepository(db.importDao())
+        repository = ImportRepository(db.importDao(), db)
         importManager = JsonImportManager(repository)
         exportService = JsonExportService(application, db.mealDao())
     }

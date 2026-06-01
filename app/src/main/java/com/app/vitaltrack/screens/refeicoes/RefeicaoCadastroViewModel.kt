@@ -315,7 +315,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                     cdFase = 1,
                     cdRefeicaoTp = _uiState.value.typeId,
                     nmQnt = itemSalvo.nmQtd,
-                    dsUnidade = itemSalvo.dsUnidade
+                    dsUnidade = itemSalvo.dsUnidade,
+                    cdRefeicaoItemApp = 1
                 )
             }
             

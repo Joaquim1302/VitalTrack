@@ -125,7 +125,8 @@ class MealRepository(
                 cdCliente = clienteId,
                 cdFase = 1,
                 cdRefeicaoTp = refeicaoTipoId,
-                nmQnt = (existing?.nmQnt ?: 0.0) + it.nmQnt
+                nmQnt = (existing?.nmQnt ?: 0.0) + it.nmQnt,
+                cdRefeicaoItemApp = 1
             )
         }
         mealDao.insertMealItems(mealItems)
@@ -139,7 +140,8 @@ class MealRepository(
                 val existing = mealDao.getSpecificMealItemSync(currentDate, refeicaoTipoId, item.cdAlimento, clienteId)
                 item.copy(
                     dtConsumo = currentDate,
-                    nmQnt = (existing?.nmQnt ?: 0.0) + (item.nmQnt ?: 0.0)
+                    nmQnt = (existing?.nmQnt ?: 0.0) + (item.nmQnt ?: 0.0),
+                    cdRefeicaoItemApp = 1
                 )
             }
             mealDao.insertMealItems(newItems)
@@ -160,7 +162,8 @@ class MealRepository(
             cdFase = 1,
             cdRefeicaoTp = refeicaoTipoId,
             nmQnt = newQuantity,
-            dsUnidade = unit
+            dsUnidade = unit,
+            cdRefeicaoItemApp = 1
         )
         mealDao.insertMealItems(listOf(item))
     }
@@ -173,7 +176,8 @@ class MealRepository(
             cdFase = 1,
             cdRefeicaoTp = refeicaoTipoId,
             nmQnt = quantity,
-            dsUnidade = unit
+            dsUnidade = unit,
+            cdRefeicaoItemApp = 1
         )
         mealDao.insertMealItems(listOf(item))
     }
