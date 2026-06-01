@@ -1,14 +1,13 @@
 package com.app.vitaltrack.utils
 
-import com.app.vitaltrack.data.entity.*
+import com.app.vitaltrack.data.entity.AlimentoEntity
+import com.app.vitaltrack.data.entity.RefeicaoItemEntity
+import com.app.vitaltrack.data.entity.RefeicaoTipoEntity
+import com.app.vitaltrack.data.entity.UnidadeEntity
 import com.app.vitaltrack.repository.ImportRepository
 import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 class JsonImportManager(private val repository: ImportRepository) {
-
-    private val isoDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
 
     suspend fun importFromJson(jsonString: String): String {
         val root = JSONObject(jsonString)
@@ -39,26 +38,6 @@ class JsonImportManager(private val repository: ImportRepository) {
                 ))
             }
             repository.importRefeicoesTipos(tipos)
-        }
-
-        // Processar tb_DT_clientes - Importar ANTES dos itens para integridade referencial
-        if (root.has("tb_DT_clientes")) {
-            val clientesArray = root.getJSONArray("tb_DT_clientes")
-            val clientes = mutableListOf<ClienteEntity>()
-            for (i in 0 until clientesArray.length()) {
-                val obj = clientesArray.getJSONObject(i)
-                val dtStr = obj.optString("DT_NASCIMENTO")
-                val dtNascimento = if (dtStr.isNotEmpty()) isoDateFormat.parse(dtStr) else null
-                
-                clientes.add(ClienteEntity(
-                    cdCliente = obj.getLong("CD_CLIENTE"),
-                    dsNome = obj.getString("DS_NOME"),
-                    cdSexo = if (obj.has("CD_SEXO")) obj.getString("CD_SEXO") else null,
-                    dtNascimento = dtNascimento,
-                    nmAltura = if (obj.has("NM_ALTURA")) obj.getDouble("NM_ALTURA") else null
-                ))
-            }
-            repository.importClientes(clientes)
         }
 
         // Processar tb_DT_alimentos
