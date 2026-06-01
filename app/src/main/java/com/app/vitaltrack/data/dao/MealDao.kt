@@ -2,6 +2,7 @@ package com.app.vitaltrack.data.dao
 
 import androidx.room.*
 import com.app.vitaltrack.data.entity.*
+import com.app.vitaltrack.data.export.ExportRefeicaoItemDto
 import kotlinx.coroutines.flow.Flow
 
 @Dao
