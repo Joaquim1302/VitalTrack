@@ -128,9 +128,9 @@ fun RefeicaoCadastroScreen(
                                 val count = uiState.alimentosSelecionados.size
                                 if (count > 0) "Selecionados ($count)" else "Selecionados"
                             }
-                            AbaAdicionarAlimento.ALIMENTOS -> "Alimentos"
-                            AbaAdicionarAlimento.RECENTES -> "Consumidos Recentemente"
-                            AbaAdicionarAlimento.MAIS_CONSUMIDOS -> "Mais Consumidos"
+                            AbaAdicionarAlimento.ALIMENTOS -> "Disponíveis"
+                            AbaAdicionarAlimento.RECENTES -> "Recentes"
+                            AbaAdicionarAlimento.MAIS_CONSUMIDOS -> "+ Consumidos"
                             AbaAdicionarAlimento.REFEICOES_SALVAS -> "Refeições Salvas"
                         }
                         Tab(
