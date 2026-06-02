@@ -9,6 +9,7 @@ import com.app.vitaltrack.data.entity.*
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.repository.MealRepository
+import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.utils.normalizeSearch
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -25,6 +26,7 @@ sealed interface RefeicaoCadastroEvent {
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: MealRepository
+    private val userPreferencesRepository = UserPreferencesRepository(application)
     private val _uiState = MutableStateFlow(RefeicaoCadastroUiState())
     val uiState: StateFlow<RefeicaoCadastroUiState> = _uiState.asStateFlow()
 
@@ -150,9 +152,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         }
 
         viewModelScope.launch {
+            val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
             repository.addFoodToMeal(
                 _uiState.value.date,
-                1, // Mock clienteId
+                clienteId,
                 _uiState.value.typeId,
                 alimentoId,
                 quantity,
@@ -176,9 +179,10 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         }
 
         viewModelScope.launch {
+            val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
             repository.updateFoodInMeal(
                 _uiState.value.date,
-                1, // Mock clienteId
+                clienteId,
                 _uiState.value.typeId,
                 alimentoId,
                 quantity,
@@ -232,14 +236,16 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
 
     fun importFavorite(favoritaId: Long) {
         viewModelScope.launch {
-            repository.importFavorite(favoritaId, _uiState.value.date, 1, _uiState.value.typeId)
+            val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
+            repository.importFavorite(favoritaId, _uiState.value.date, clienteId, _uiState.value.typeId)
             _uiState.update { it.copy(successMessage = "Refeição favorita importada.") }
         }
     }
 
     fun copyPreviousMeal() {
         viewModelScope.launch {
-            val success = repository.copyPreviousMeal(1, _uiState.value.typeId, _uiState.value.date)
+            val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
+            val success = repository.copyPreviousMeal(clienteId, _uiState.value.typeId, _uiState.value.date)
             if (success) {
                 _uiState.update { it.copy(successMessage = "Refeição anterior copiada.") }
             } else {
@@ -306,12 +312,13 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
     fun adicionarRefeicaoSalva(id: Long) {
         viewModelScope.launch {
             val salvaComItens = repository.buscarRefeicaoSalvaComItens(id) ?: return@launch
+            val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
             
             val novosItens = salvaComItens.itens.map { itemSalvo ->
                 RefeicaoItemEntity(
                     dtConsumo = _uiState.value.date,
                     cdAlimento = itemSalvo.cdAlimento,
-                    cdCliente = 1, // Mock
+                    cdCliente = clienteId,
                     cdFase = 1,
                     cdRefeicaoTp = _uiState.value.typeId,
                     nmQnt = itemSalvo.nmQtd,

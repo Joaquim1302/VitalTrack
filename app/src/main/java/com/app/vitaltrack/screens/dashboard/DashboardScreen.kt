@@ -2,6 +2,7 @@ package com.app.vitaltrack.screens.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -28,6 +29,7 @@ import com.app.vitaltrack.ui.widgets.*
 @Composable
 fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onNavigateToMealRegistration: (String, Int) -> Unit,
     onNavigateToExport: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel()
@@ -47,7 +49,7 @@ fun DashboardScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
-                DashboardHeader()
+                DashboardHeader(onProfileClick = onNavigateToProfile)
             },
             bottomBar = {
                 VitalTrackBottomNavigation(
@@ -146,7 +148,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardHeader() {
+fun DashboardHeader(onProfileClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +176,8 @@ fun DashboardHeader() {
                 .size(40.dp)
                 .clip(CircleShape)
                 .background(TealLight)
-                .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape),
+                .border(1.dp, Color.White.copy(alpha = 0.5f), CircleShape)
+                .clickable { onProfileClick() },
             contentAlignment = Alignment.Center
         ) {
             Icon(

@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.app.vitaltrack.screens.configuracoes.ConfiguracoesScreen
 import com.app.vitaltrack.screens.dashboard.DashboardScreen
+import com.app.vitaltrack.screens.perfil.PerfilClienteScreen
 import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
 
 @Composable
@@ -21,6 +22,9 @@ fun NavGraph(navController: NavHostController) {
                 onNavigateToConfig = {
                     navController.navigate(Screen.Settings.route)
                 },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.Profile.route)
+                },
                 onNavigateToMealRegistration = { date, typeId ->
                     navController.navigate(Screen.MealRegistration.createRoute(date, typeId))
                 },
@@ -28,6 +32,11 @@ fun NavGraph(navController: NavHostController) {
                     navController.navigate(Screen.Settings.route)
                 }
             )
+        }
+        composable(Screen.Profile.route) {
+            PerfilClienteScreen(onBackClick = {
+                navController.popBackStack()
+            })
         }
         composable(Screen.Settings.route) {
             ConfiguracoesScreen(onBackClick = {

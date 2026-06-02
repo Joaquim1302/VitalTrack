@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.WaterDrop
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.MealRepository
+import com.app.vitaltrack.repository.UserPreferencesRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -36,6 +38,7 @@ data class DashboardUiState(
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: MealRepository
+    private val userPreferencesRepository = UserPreferencesRepository(application)
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
@@ -47,30 +50,54 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     init {
         val db = AppDatabase.getDatabase(application)
         repository = MealRepository(db.mealDao(), db.refeicaoSalvaDao())
+        observePreferences()
         observeMealCalories()
+    }
+
+    private fun observePreferences() {
+        userPreferencesRepository.userPreferencesFlow
+            .onEach { prefs ->
+                _uiState.update { it.copy(
+                    calorieGoal = prefs.metaCalorias
+                ) }
+
+                if (prefs.clienteAtivoId == null) {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        val db = AppDatabase.getDatabase(getApplication())
+                        val clientes = db.clienteDao().listar()
+                        if (clientes.isNotEmpty()) {
+                            userPreferencesRepository.updateClienteAtivo(clientes[0].cdCliente, clientes[0].dsNome)
+                        }
+                    }
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observeMealCalories() {
         observationsJob?.cancel()
-        observationsJob = _uiState
-            .map { it.date.format(dbDateFormatter) }
-            .distinctUntilChanged()
-            .flatMapLatest { date ->
-                repository.getCaloriesPerMeal(date, 1) // Mock clienteId = 1
-            }
-            .onEach { caloriesList ->
-                _uiState.update { state ->
-                    val updatedMeals = state.meals.map { meal ->
-                        val mealCal = caloriesList.find { it.cdRefeicaoTp == meal.id.toInt() }
-                        meal.copy(calories = mealCal?.totalCal ?: 0.0)
-                    }
-                    state.copy(
-                        meals = updatedMeals,
-                        totalConsumed = updatedMeals.sumOf { it.calories }
-                    )
+        observationsJob = combine(
+            _uiState.map { it.date.format(dbDateFormatter) }.distinctUntilChanged(),
+            userPreferencesRepository.userPreferencesFlow.map { it.clienteAtivoId }.distinctUntilChanged()
+        ) { date, clienteId ->
+            date to (clienteId ?: 1L)
+        }
+        .flatMapLatest { (date, clienteId) ->
+            repository.getCaloriesPerMeal(date, clienteId)
+        }
+        .onEach { caloriesList ->
+            _uiState.update { state ->
+                val updatedMeals = state.meals.map { meal ->
+                    val mealCal = caloriesList.find { it.cdRefeicaoTp == meal.id.toInt() }
+                    meal.copy(calories = mealCal?.totalCal ?: 0.0)
                 }
+                state.copy(
+                    meals = updatedMeals,
+                    totalConsumed = updatedMeals.sumOf { it.calories }
+                )
             }
-            .launchIn(viewModelScope)
+        }
+        .launchIn(viewModelScope)
     }
 
     fun getFormattedDate(): String {
