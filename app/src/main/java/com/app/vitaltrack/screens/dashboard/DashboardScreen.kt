@@ -103,6 +103,7 @@ fun DashboardScreen(
                     )
                 }
 
+/*
                 item {
                     Text(
                         text = "Funcionalidades recomendadas",
@@ -143,6 +144,7 @@ fun DashboardScreen(
                         }
                     }
                 }
+*/
             }
         }
     }
