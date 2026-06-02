@@ -57,6 +57,7 @@ fun DashboardScreen(
                     onItemClick = { 
                         selectedTab = it 
                         if (it == 3) onNavigateToConfig()
+                        if (it == 1) onNavigateToExport()
                     }
                 )
             }

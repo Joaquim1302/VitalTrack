@@ -2,9 +2,9 @@ package com.app.vitaltrack.ui.widgets
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -34,19 +34,7 @@ fun VitalTrackBottomNavigation(
                 indicatorColor = Color.Transparent
             )
         )
-        NavigationBarItem(
-            icon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
-            label = { Text("Buscar") },
-            selected = selectedItem == 1,
-            onClick = { onItemClick(1) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = TealLight,
-                selectedTextColor = TealLight,
-                unselectedIconColor = Color.White.copy(alpha = 0.5f),
-                unselectedTextColor = Color.White.copy(alpha = 0.5f),
-                indicatorColor = Color.Transparent
-            )
-        )
+
         NavigationBarItem(
             icon = { Icon(Icons.Default.Timeline, contentDescription = "Progresso") },
             label = { Text("Progresso") },
@@ -60,6 +48,21 @@ fun VitalTrackBottomNavigation(
                 indicatorColor = Color.Transparent
             )
         )
+
+        NavigationBarItem(
+            icon = { Icon(Icons.Default.Upload, contentDescription = "Exportar para Access") },
+            label = { Text("Exportar") },
+            selected = selectedItem == 1,
+            onClick = { onItemClick(1) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = TealLight,
+                selectedTextColor = TealLight,
+                unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                unselectedTextColor = Color.White.copy(alpha = 0.5f),
+                indicatorColor = Color.Transparent
+            )
+        )
+
         NavigationBarItem(
             icon = { Icon(Icons.Default.Settings, contentDescription = "Config") },
             label = { Text("Config") },

@@ -103,7 +103,11 @@ fun ConfiguracoesScreen(
                 VitalTrackBottomNavigation(
                     selectedItem = 3,
                     onItemClick = { 
-                        if (it == 0) onBackClick()
+                        when (it) {
+                            0 -> onBackClick()
+                            1 -> {} // Já está na tela de exportação
+                            3 -> {} // Já está em configurações
+                        }
                     }
                 )
             }
