@@ -84,7 +84,7 @@ class ConfiguracoesViewModel(application: Application) : AndroidViewModel(applic
                         writer.write(jsonString)
                     }
                 }
-                _exportState.value = ExportState.Success("Exportação concluída com sucesso.\nArquivo: vitaltrack_export.json")
+                _exportState.value = ExportState.Success("Exportação concluída com sucesso.\nArquivo: vt_export_to_access.json")
             } catch (e: Exception) {
                 Log.e("ConfiguracoesViewModel", "Falha ao exportar os dados", e)
                 _exportState.value = ExportState.Error("Falha ao exportar os dados.")
