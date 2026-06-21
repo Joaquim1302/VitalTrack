@@ -67,12 +67,15 @@ fun VitalTrackBottomNavigation(
             icon = { Icon(Icons.Default.Settings, contentDescription = "Config") },
             label = { Text("Config") },
             selected = selectedItem == 3,
+            enabled = false,
             onClick = { onItemClick(3) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = TealLight,
                 selectedTextColor = TealLight,
                 unselectedIconColor = Color.White.copy(alpha = 0.5f),
                 unselectedTextColor = Color.White.copy(alpha = 0.5f),
+                disabledIconColor = Color.White.copy(alpha = 0.2f),
+                disabledTextColor = Color.White.copy(alpha = 0.2f),
                 indicatorColor = Color.Transparent
             )
         )

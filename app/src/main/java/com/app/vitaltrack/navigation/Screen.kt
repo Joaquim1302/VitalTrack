@@ -6,6 +6,7 @@ sealed class Screen(val route: String) {
     object Progress : Screen("progress")
     object Settings : Screen("settings")
     object Profile : Screen("profile")
+    object TransferData : Screen("transfer_data")
     object MealRegistration : Screen("meal_registration/{date}/{typeId}") {
         fun createRoute(date: String, typeId: Int) = "meal_registration/$date/$typeId"
     }

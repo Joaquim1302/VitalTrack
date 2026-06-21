@@ -10,6 +10,7 @@ import com.app.vitaltrack.screens.configuracoes.ConfiguracoesScreen
 import com.app.vitaltrack.screens.dashboard.DashboardScreen
 import com.app.vitaltrack.screens.perfil.PerfilClienteScreen
 import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
+import com.app.vitaltrack.screens.transferencia.TransferirDadosScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -29,19 +30,29 @@ fun NavGraph(navController: NavHostController) {
                     navController.navigate(Screen.MealRegistration.createRoute(date, typeId))
                 },
                 onNavigateToExport = {
-                    navController.navigate(Screen.Settings.route)
+                    navController.navigate(Screen.TransferData.route)
                 }
             )
         }
+        val onBack = { navController.popBackStack() }
         composable(Screen.Profile.route) {
-            PerfilClienteScreen(onBackClick = {
-                navController.popBackStack()
-            })
+            PerfilClienteScreen(onBackClick = { onBack() })
         }
         composable(Screen.Settings.route) {
-            ConfiguracoesScreen(onBackClick = {
-                navController.popBackStack()
-            })
+            ConfiguracoesScreen(
+                onBackClick = { onBack() },
+                onNavigateToExport = {
+                    navController.navigate(Screen.TransferData.route)
+                }
+            )
+        }
+        composable(Screen.TransferData.route) {
+            TransferirDadosScreen(
+                onBackClick = { onBack() },
+                onNavigateToConfig = {
+                    navController.navigate(Screen.Settings.route)
+                }
+            )
         }
         composable(
             route = Screen.MealRegistration.route,
