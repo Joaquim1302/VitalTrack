@@ -11,11 +11,15 @@ import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.WaterDrop
+import com.app.vitaltrack.data.gamification.GamificationEvent
+import com.app.vitaltrack.data.gamification.GamificationRepository
+import com.app.vitaltrack.data.gamification.GamificationState
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.MealRepository
 import com.app.vitaltrack.repository.UserPreferencesRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -26,6 +30,7 @@ data class DashboardUiState(
     val date: LocalDate = LocalDate.now(),
     val meals: List<Meal> = Meal.defaultMeals,
     val totalConsumed: Double = 0.0,
+    val gamificationState: GamificationState? = null,
     val recommendedFeatures: List<RecommendedFeature> = listOf(
         RecommendedFeature("Lembrete de hidratação", Icons.Default.WaterDrop),
         RecommendedFeature("Exportar para Access", Icons.Default.Upload),
@@ -35,12 +40,21 @@ data class DashboardUiState(
     val calorieGoal: Double = 2000.0
 )
 
+sealed interface DashboardEvent {
+    data class ShowSnackbar(val message: String) : DashboardEvent
+}
+
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: MealRepository
+    private val gamificationRepository = GamificationRepository(application)
     private val userPreferencesRepository = UserPreferencesRepository(application)
+    
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<DashboardEvent>()
+    val events: Flow<DashboardEvent> = _events.receiveAsFlow()
 
     private val dateFormatter = DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", Locale.forLanguageTag("pt-BR"))
     private val dbDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
@@ -52,6 +66,24 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         repository = MealRepository(db.mealDao(), db.refeicaoSalvaDao())
         observePreferences()
         observeMealCalories()
+        observeGamification()
+    }
+
+    private fun observeGamification() {
+        userPreferencesRepository.userPreferencesFlow
+            .map { it.clienteAtivoId }
+            .distinctUntilChanged()
+            .flatMapLatest { clientId ->
+                if (clientId != null) {
+                    gamificationRepository.getGamificationStateFlow(clientId)
+                } else {
+                    flowOf(null)
+                }
+            }
+            .onEach { state ->
+                _uiState.update { it.copy(gamificationState = state) }
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun observePreferences() {
@@ -86,14 +118,33 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             repository.getCaloriesPerMeal(date, clienteId)
         }
         .onEach { caloriesList ->
-            _uiState.update { state ->
-                val updatedMeals = state.meals.map { meal ->
+            val totalConsumed = caloriesList.sumOf { it.totalCal }
+            val state = _uiState.value
+            
+            // Check for Calorie Goal Reached event
+            if (totalConsumed >= state.calorieGoal && state.calorieGoal > 0) {
+                val clientId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId
+                if (clientId != null) {
+                    val result = gamificationRepository.registerEvent(
+                        GamificationEvent.CalorieGoalReached(
+                            clientId = clientId,
+                            date = state.date.format(dbDateFormatter)
+                        )
+                    )
+                    result.messages.forEach { msg ->
+                        _events.send(DashboardEvent.ShowSnackbar(msg))
+                    }
+                }
+            }
+
+            _uiState.update { currentState ->
+                val updatedMeals = currentState.meals.map { meal ->
                     val mealCal = caloriesList.find { it.cdRefeicaoTp == meal.id.toInt() }
                     meal.copy(calories = mealCal?.totalCal ?: 0.0)
                 }
-                state.copy(
+                currentState.copy(
                     meals = updatedMeals,
-                    totalConsumed = updatedMeals.sumOf { it.calories }
+                    totalConsumed = totalConsumed
                 )
             }
         }

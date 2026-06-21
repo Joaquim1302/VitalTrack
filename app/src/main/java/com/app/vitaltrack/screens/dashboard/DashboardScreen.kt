@@ -34,7 +34,18 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var selectedTab by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is DashboardEvent.ShowSnackbar -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -47,6 +58,7 @@ fun DashboardScreen(
     ) {
         Scaffold(
             containerColor = Color.Transparent,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 DashboardHeader(onProfileClick = onNavigateToProfile)
             },
@@ -82,6 +94,12 @@ fun DashboardScreen(
                         consumed = uiState.totalConsumed,
                         goal = uiState.calorieGoal
                     )
+                }
+
+                uiState.gamificationState?.let { gamificationState ->
+                    item {
+                        GamificationProgressCard(state = gamificationState)
+                    }
                 }
 
                 item {

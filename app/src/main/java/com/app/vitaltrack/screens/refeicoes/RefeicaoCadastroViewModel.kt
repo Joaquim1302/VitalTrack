@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.app.vitaltrack.data.dao.AlimentoDisponivel
 import com.app.vitaltrack.data.dao.RefeicaoItemComDescricao
 import com.app.vitaltrack.data.entity.*
+import com.app.vitaltrack.data.gamification.GamificationEvent
+import com.app.vitaltrack.data.gamification.GamificationRepository
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.model.Meal
 import com.app.vitaltrack.repository.MealRepository
@@ -26,6 +28,7 @@ sealed interface RefeicaoCadastroEvent {
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: MealRepository
+    private val gamificationRepository = GamificationRepository(application)
     private val userPreferencesRepository = UserPreferencesRepository(application)
     private val _uiState = MutableStateFlow(RefeicaoCadastroUiState())
     val uiState: StateFlow<RefeicaoCadastroUiState> = _uiState.asStateFlow()
@@ -168,6 +171,25 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                     alimentoMaisConsumidoSelecionado = null
                 ) 
             }
+            
+            // Trigger Gamification Events
+            val mealResult = gamificationRepository.registerEvent(
+                GamificationEvent.MealRegistered(
+                    clientId = clienteId,
+                    date = _uiState.value.date
+                )
+            )
+            val foodResult = gamificationRepository.registerEvent(
+                GamificationEvent.FoodAdded(
+                    clientId = clienteId,
+                    date = _uiState.value.date
+                )
+            )
+            
+            (mealResult.messages + foodResult.messages).forEach { msg ->
+                _events.send(RefeicaoCadastroEvent.ShowSnackbar(msg))
+            }
+            
             _events.send(RefeicaoCadastroEvent.ShowSnackbar("Alimento adicionado à refeição."))
         }
     }
@@ -238,6 +260,17 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
         viewModelScope.launch {
             val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
             repository.importFavorite(favoritaId, _uiState.value.date, clienteId, _uiState.value.typeId)
+            
+            val gamificationResult = gamificationRepository.registerEvent(
+                GamificationEvent.MealRegistered(
+                    clientId = clienteId,
+                    date = _uiState.value.date
+                )
+            )
+            gamificationResult.messages.forEach { msg ->
+                _events.send(RefeicaoCadastroEvent.ShowSnackbar(msg))
+            }
+            
             _uiState.update { it.copy(successMessage = "Refeição favorita importada.") }
         }
     }
@@ -247,6 +280,15 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             val clienteId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId ?: 1L
             val success = repository.copyPreviousMeal(clienteId, _uiState.value.typeId, _uiState.value.date)
             if (success) {
+                val gamificationResult = gamificationRepository.registerEvent(
+                    GamificationEvent.MealRegistered(
+                        clientId = clienteId,
+                        date = _uiState.value.date
+                    )
+                )
+                gamificationResult.messages.forEach { msg ->
+                    _events.send(RefeicaoCadastroEvent.ShowSnackbar(msg))
+                }
                 _uiState.update { it.copy(successMessage = "Refeição anterior copiada.") }
             } else {
                 _uiState.update { it.copy(errorMessage = "Nenhuma refeição anterior encontrada.") }
@@ -329,6 +371,16 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             
             // Gravar itens no banco de dados real
             repository.insertMealItems(novosItens)
+
+            val gamificationResult = gamificationRepository.registerEvent(
+                GamificationEvent.MealRegistered(
+                    clientId = clienteId,
+                    date = _uiState.value.date
+                )
+            )
+            gamificationResult.messages.forEach { msg ->
+                _events.send(RefeicaoCadastroEvent.ShowSnackbar(msg))
+            }
             
             _uiState.update { 
                 it.copy(
