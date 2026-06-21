@@ -1,8 +1,25 @@
-# VitalTrack 
+<h1>
+  <img src="docs/images/vitaltrack_icon.png" alt="Ícone VitalTrack" width="42" align="left">
+  VitalTrack
+</h1>
 
 Aplicativo Android para monitoramento de alimentação, exercícios físicos, peso corporal e evolução da saúde, desenvolvido com **Kotlin** e **Jetpack Compose**.
 
 O VitalTrack foi criado com foco na **eficiência do registro nutricional**, reduzindo ao máximo o tempo necessário para registrar refeições, acompanhar calorias, reutilizar alimentos recorrentes e manter o histórico alimentar organizado.
+
+<p align="center">
+  
+<img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-blue">
+
+<img src="https://img.shields.io/badge/Fase-%20Gamificação-green">
+
+<img src="https://img.shields.io/badge/Database-MS Access-orange">
+
+<img src="https://img.shields.io/badge/IA-ChatGPT%20%7C%20Gemini%20%7C%20Copilot-purple">
+  
+</p>
+
+---
 
 ---
 
@@ -44,7 +61,7 @@ Permitir o acompanhamento nutricional e físico de forma simples, rápida e efic
 
 ### Dashboard
 
-Tela inicial do aplicativo, funcionando como central de controle do usuário.
+Tela inicial do aplicativo, funcionando como central de controle do usuário. 
 
 Funcionalidades principais:
 
@@ -107,6 +124,59 @@ Funcionalidades:
 * Integração com sistemas externos, como MS Access
 * Marcação de registros novos ou alterados para exportação
 * Uso do Storage Access Framework do Android para escolha da pasta de destino
+
+---
+## Capturas de Tela
+
+### Dashboard
+
+Tela inicial com resumo diário, meta calórica, refeições do dia e acesso rápido ao perfil do cliente.
+
+<p align="center">
+  <img src="docs/images/dashboard.jpg" width="250" alt="Dashboard do VitalTrack">
+</p>
+
+---
+
+### Cadastro de Refeição
+
+Fluxo inteligente para adicionar alimentos à refeição, com abas para itens selecionados, alimentos recentes, mais consumidos, busca global e refeições salvas.
+
+<p align="center">
+  <img src="docs/images/cadastro_refeicao_selecionados.jpg" width="220" alt="Alimentos selecionados">
+  <img src="docs/images/cadastro_refeicao_recentes.jpg" width="220" alt="Consumidos recentemente">
+  <img src="docs/images/cadastro_refeicao_mais_consumidos.jpg" width="220" alt="Alimentos mais consumidos">
+</p>
+
+---
+
+### Refeições Salvas
+
+Permite reutilizar modelos completos de refeições, reduzindo o tempo de cadastro alimentar.
+
+<p align="center">
+  <img src="docs/images/refeicoes_salvas.jpg" width="250" alt="Refeições salvas no VitalTrack">
+</p>
+
+---
+
+### Perfil do Cliente
+
+Tela para seleção do cliente ativo e definição da meta calórica diária.
+
+<p align="center">
+  <img src="docs/images/perfil_cliente.jpg" width="250" alt="Perfil do cliente no VitalTrack">
+</p>
+
+---
+
+### Configurações e Gestão de Dados
+
+Área dedicada à importação e exportação de dados, incluindo integração por JSON e compatibilidade com MS Access.
+
+<p align="center">
+  <img src="docs/images/configuracoes.jpg" width="250" alt="Configurações do VitalTrack">
+</p>
 
 ---
 
