@@ -21,8 +21,6 @@ O VitalTrack foi criado com foco na **eficiência do registro nutricional**, red
 
 ---
 
----
-
 ## Objetivo
 
 Permitir o acompanhamento nutricional e físico de forma simples, rápida e eficiente, apoiando usuários em objetivos como:
@@ -170,7 +168,7 @@ Tela para seleção do cliente ativo e definição da meta calórica diária.
 
 ---
 
-### Configurações e Gestão de Dados
+<!--### Configurações e Gestão de Dados
 
 Área dedicada à importação e exportação de dados, incluindo integração por JSON e compatibilidade com MS Access.
 
@@ -178,7 +176,7 @@ Tela para seleção do cliente ativo e definição da meta calórica diária.
   <img src="docs/images/configuracoes.jpg" width="250" alt="Configurações do VitalTrack">
 </p>
 
----
+---  -->
 
 ## Banco de Dados e Arquitetura
 
