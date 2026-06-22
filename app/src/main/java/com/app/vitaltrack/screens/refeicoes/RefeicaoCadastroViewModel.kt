@@ -176,7 +176,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             val mealResult = gamificationRepository.registerEvent(
                 GamificationEvent.MealRegistered(
                     clientId = clienteId,
-                    date = _uiState.value.date
+                    date = _uiState.value.date,
+                    mealType = _uiState.value.mealName
                 )
             )
             val foodResult = gamificationRepository.registerEvent(
@@ -264,7 +265,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             val gamificationResult = gamificationRepository.registerEvent(
                 GamificationEvent.MealRegistered(
                     clientId = clienteId,
-                    date = _uiState.value.date
+                    date = _uiState.value.date,
+                    mealType = _uiState.value.mealName
                 )
             )
             gamificationResult.messages.forEach { msg ->
@@ -283,7 +285,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
                 val gamificationResult = gamificationRepository.registerEvent(
                     GamificationEvent.MealRegistered(
                         clientId = clienteId,
-                        date = _uiState.value.date
+                        date = _uiState.value.date,
+                        mealType = _uiState.value.mealName
                     )
                 )
                 gamificationResult.messages.forEach { msg ->
@@ -375,7 +378,8 @@ class RefeicaoCadastroViewModel(application: Application) : AndroidViewModel(app
             val gamificationResult = gamificationRepository.registerEvent(
                 GamificationEvent.MealRegistered(
                     clientId = clienteId,
-                    date = _uiState.value.date
+                    date = _uiState.value.date,
+                    mealType = _uiState.value.mealName
                 )
             )
             gamificationResult.messages.forEach { msg ->

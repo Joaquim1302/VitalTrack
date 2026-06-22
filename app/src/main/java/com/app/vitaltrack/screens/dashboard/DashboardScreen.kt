@@ -29,6 +29,7 @@ import com.app.vitaltrack.ui.widgets.*
 fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToGamification: () -> Unit,
     onNavigateToMealRegistration: (String, Int) -> Unit,
     onNavigateToExport: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel()
@@ -98,7 +99,10 @@ fun DashboardScreen(
 
                 uiState.gamificationState?.let { gamificationState ->
                     item {
-                        GamificationProgressCard(state = gamificationState)
+                        GamificationProgressCard(
+                            state = gamificationState,
+                            onClick = onNavigateToGamification
+                        )
                     }
                 }
 

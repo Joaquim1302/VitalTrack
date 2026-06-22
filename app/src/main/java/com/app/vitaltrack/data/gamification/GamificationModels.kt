@@ -16,12 +16,12 @@ data class GamificationState(
 @Serializable
 data class DailyGamificationState(
     val date: String,
-    val mealRegistered: Boolean = false,
-    val foodsAddedCount: Int = 0,
-    val allMealsRegistered: Boolean = false,
-    val workoutRegistered: Boolean = false,
+    val registeredMealTypes: Set<String> = emptySet(),
+    val foodItemsPointedCount: Int = 0,
     val weightRegistered: Boolean = false,
-    val calorieGoalReached: Boolean = false
+    val workoutRegistered: Boolean = false,
+    val calorieGoalRewarded: Boolean = false,
+    val streakRewarded: Boolean = false
 )
 
 data class GamificationResult(
@@ -30,7 +30,8 @@ data class GamificationResult(
     val levelUp: Boolean = false,
     val newLevel: Int = 1,
     val unlockedAchievements: List<Achievement> = emptyList(),
-    val messages: List<String> = emptyList()
+    val messages: List<String> = emptyList(),
+    val snackbarMessage: String? = null
 )
 
 @Serializable

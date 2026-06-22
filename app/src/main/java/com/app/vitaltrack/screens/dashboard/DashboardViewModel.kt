@@ -122,7 +122,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             val state = _uiState.value
             
             // Check for Calorie Goal Reached event
-            if (totalConsumed >= state.calorieGoal && state.calorieGoal > 0) {
+            if (totalConsumed > 0 && totalConsumed <= state.calorieGoal) {
                 val clientId = userPreferencesRepository.userPreferencesFlow.first().clienteAtivoId
                 if (clientId != null) {
                     val result = gamificationRepository.registerEvent(

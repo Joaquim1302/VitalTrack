@@ -8,6 +8,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.app.vitaltrack.screens.configuracoes.ConfiguracoesScreen
 import com.app.vitaltrack.screens.dashboard.DashboardScreen
+import com.app.vitaltrack.screens.gamification.GamificationScreen
 import com.app.vitaltrack.screens.perfil.PerfilClienteScreen
 import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
 import com.app.vitaltrack.screens.transferencia.TransferirDadosScreen
@@ -26,6 +27,9 @@ fun NavGraph(navController: NavHostController) {
                 onNavigateToProfile = {
                     navController.navigate(Screen.Profile.route)
                 },
+                onNavigateToGamification = {
+                    navController.navigate(Screen.Gamification.route)
+                },
                 onNavigateToMealRegistration = { date, typeId ->
                     navController.navigate(Screen.MealRegistration.createRoute(date, typeId))
                 },
@@ -37,6 +41,9 @@ fun NavGraph(navController: NavHostController) {
         val onBack = { navController.popBackStack() }
         composable(Screen.Profile.route) {
             PerfilClienteScreen(onBackClick = { onBack() })
+        }
+        composable(Screen.Gamification.route) {
+            GamificationScreen(onBackClick = { onBack() })
         }
         composable(Screen.Settings.route) {
             ConfiguracoesScreen(

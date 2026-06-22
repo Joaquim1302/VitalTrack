@@ -1,12 +1,14 @@
 package com.app.vitaltrack.data.gamification
 
 object GamificationRules {
-    const val POINTS_FIRST_MEAL_OF_DAY = 10
+    const val POINTS_MEAL_REGISTERED = 10
     const val POINTS_FOOD_ADDED = 2
     const val POINTS_WORKOUT_REGISTERED = 30
     const val POINTS_WEIGHT_REGISTERED = 10
     const val POINTS_CALORIE_GOAL_REACHED = 50
     const val POINTS_DAILY_STREAK = 10
+    
+    const val MAX_FOOD_POINTS_PER_DAY = 5
 
     val basicAchievements = listOf(
         Achievement(

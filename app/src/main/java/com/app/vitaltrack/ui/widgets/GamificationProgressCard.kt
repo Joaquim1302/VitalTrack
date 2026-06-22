@@ -2,6 +2,7 @@ package com.app.vitaltrack.ui.widgets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -24,7 +25,8 @@ import com.app.vitaltrack.ui.theme.*
 @Composable
 fun GamificationProgressCard(
     state: GamificationState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     val levelName = GamificationRules.getLevelName(state.level)
     val progress = GamificationRules.calculateLevelProgress(state.totalPoints)
@@ -36,6 +38,7 @@ fun GamificationProgressCard(
             .clip(RoundedCornerShape(20.dp))
             .background(CardBackground)
             .border(1.dp, CardBorder, RoundedCornerShape(20.dp))
+            .clickable { onClick() }
             .padding(16.dp)
     ) {
         Column {

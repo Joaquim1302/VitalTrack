@@ -42,16 +42,19 @@ class GamificationRepository(private val context: Context) {
         // 1. Process Event and Calculate Points
         when (event) {
             is GamificationEvent.MealRegistered -> {
-                if (!dailyState.mealRegistered) {
-                    pointsToAdd += GamificationRules.POINTS_FIRST_MEAL_OF_DAY
-                    dailyState = dailyState.copy(mealRegistered = true)
-                    messages.add("+${GamificationRules.POINTS_FIRST_MEAL_OF_DAY} pontos! Refeição registrada.")
+                val mealType = event.mealType ?: "Geral"
+                if (!dailyState.registeredMealTypes.contains(mealType)) {
+                    pointsToAdd += GamificationRules.POINTS_MEAL_REGISTERED
+                    val newMealTypes = dailyState.registeredMealTypes.toMutableSet()
+                    newMealTypes.add(mealType)
+                    dailyState = dailyState.copy(registeredMealTypes = newMealTypes)
+                    messages.add("+${GamificationRules.POINTS_MEAL_REGISTERED} pontos! Refeição registrada.")
                 }
             }
             is GamificationEvent.FoodAdded -> {
-                if (dailyState.foodsAddedCount < 5) {
+                if (dailyState.foodItemsPointedCount < GamificationRules.MAX_FOOD_POINTS_PER_DAY) {
                     pointsToAdd += GamificationRules.POINTS_FOOD_ADDED
-                    dailyState = dailyState.copy(foodsAddedCount = dailyState.foodsAddedCount + 1)
+                    dailyState = dailyState.copy(foodItemsPointedCount = dailyState.foodItemsPointedCount + 1)
                     messages.add("+${GamificationRules.POINTS_FOOD_ADDED} pontos! Alimento adicionado.")
                 }
             }
@@ -70,37 +73,47 @@ class GamificationRepository(private val context: Context) {
                 }
             }
             is GamificationEvent.CalorieGoalReached -> {
-                if (!dailyState.calorieGoalReached) {
+                if (!dailyState.calorieGoalRewarded) {
                     pointsToAdd += GamificationRules.POINTS_CALORIE_GOAL_REACHED
-                    dailyState = dailyState.copy(calorieGoalReached = true)
+                    dailyState = dailyState.copy(calorieGoalRewarded = true)
                     messages.add("Meta batida! +${GamificationRules.POINTS_CALORIE_GOAL_REACHED} pontos.")
                 }
             }
             is GamificationEvent.AppUsedToday -> {
-                // Apenas para trigger de streak, sem pontos extras aqui se já ganhou por outras ações
+                // Trigger for streak logic only
             }
         }
 
         // 2. Update Streak
-        val today = LocalDate.parse(date)
+        val today = try { LocalDate.parse(date) } catch(_: Exception) { LocalDate.now() }
         val lastActiveStr = state.lastActiveDate
         
         if (lastActiveStr == null) {
             state = state.copy(currentStreak = 1, lastActiveDate = date)
+            pointsToAdd += GamificationRules.POINTS_DAILY_STREAK
+            dailyState = dailyState.copy(streakRewarded = true)
+            messages.add("Primeiro dia ativo! +${GamificationRules.POINTS_DAILY_STREAK} pontos.")
         } else {
             val lastActive = LocalDate.parse(lastActiveStr)
             if (lastActive.isBefore(today)) {
                 val daysBetween = ChronoUnit.DAYS.between(lastActive, today)
                 if (daysBetween == 1L) {
-                    state = state.copy(
-                        currentStreak = state.currentStreak + 1,
-                        lastActiveDate = date
-                    )
-                    pointsToAdd += GamificationRules.POINTS_DAILY_STREAK
-                    messages.add("Sequência mantida: ${state.currentStreak} dias! +${GamificationRules.POINTS_DAILY_STREAK} pontos.")
-                } else if (daysBetween > 1L) {
+                    if (!dailyState.streakRewarded) {
+                        state = state.copy(
+                            currentStreak = state.currentStreak + 1,
+                            lastActiveDate = date
+                        )
+                        pointsToAdd += GamificationRules.POINTS_DAILY_STREAK
+                        dailyState = dailyState.copy(streakRewarded = true)
+                        messages.add("Sequência mantida: ${state.currentStreak} dias! +${GamificationRules.POINTS_DAILY_STREAK} pontos.")
+                    }
+                } else {
                     state = state.copy(currentStreak = 1, lastActiveDate = date)
-                    messages.add("Nova sequência iniciada!")
+                    if (!dailyState.streakRewarded) {
+                        pointsToAdd += GamificationRules.POINTS_DAILY_STREAK
+                        dailyState = dailyState.copy(streakRewarded = true)
+                        messages.add("Nova sequência iniciada! +${GamificationRules.POINTS_DAILY_STREAK} pontos.")
+                    }
                 }
             }
         }
@@ -114,7 +127,6 @@ class GamificationRepository(private val context: Context) {
         var levelUp = false
         if (newLevel > oldLevel) {
             levelUp = true
-            messages.add("Você subiu para o nível $newLevel: ${GamificationRules.getLevelName(newLevel)}!")
         }
 
         state = state.copy(
@@ -128,19 +140,18 @@ class GamificationRepository(private val context: Context) {
         GamificationRules.basicAchievements.forEach { achievement ->
             if (!currentAchievements.contains(achievement.id)) {
                 val shouldUnlock = when (achievement.id) {
-                    "FIRST_MEAL" -> dailyState.mealRegistered
+                    "FIRST_MEAL" -> dailyState.registeredMealTypes.isNotEmpty()
                     "FIRST_WEIGHT" -> dailyState.weightRegistered
                     "FIRST_WORKOUT" -> dailyState.workoutRegistered
                     "THREE_DAY_STREAK" -> state.currentStreak >= 3
                     "SEVEN_DAY_STREAK" -> state.currentStreak >= 7
-                    "CALORIE_GOAL_FIRST" -> dailyState.calorieGoalReached
+                    "CALORIE_GOAL_FIRST" -> dailyState.calorieGoalRewarded
                     else -> false
                 }
                 
                 if (shouldUnlock) {
                     currentAchievements.add(achievement.id)
                     newlyUnlockedAchievements.add(achievement)
-                    messages.add("Conquista desbloqueada: ${achievement.title}!")
                 }
             }
         }
@@ -151,13 +162,25 @@ class GamificationRepository(private val context: Context) {
         dataStore.saveGamificationState(state)
         dataStore.saveDailyState(clientId, dailyState)
 
+        // Build Summarized Snackbar Message
+        val snackbarMsg = when {
+            levelUp -> "Você subiu para o nível $newLevel: ${GamificationRules.getLevelName(newLevel)}!"
+            newlyUnlockedAchievements.isNotEmpty() -> "Conquista desbloqueada: ${newlyUnlockedAchievements.first().title}!"
+            pointsToAdd > 0 -> {
+                val actionMsg = messages.firstOrNull()?.substringAfter("! ") ?: "Pontos ganhos!"
+                "+$pointsToAdd pontos! $actionMsg"
+            }
+            else -> null
+        }
+
         return GamificationResult(
             pointsAdded = pointsToAdd,
             newTotalPoints = newTotalPoints,
             levelUp = levelUp,
             newLevel = newLevel,
             unlockedAchievements = newlyUnlockedAchievements,
-            messages = messages
+            messages = messages,
+            snackbarMessage = snackbarMsg
         )
     }
 }
