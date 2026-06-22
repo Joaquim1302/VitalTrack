@@ -26,6 +26,7 @@ import com.app.vitaltrack.ui.theme.*
 fun GamificationProgressCard(
     state: GamificationState,
     modifier: Modifier = Modifier,
+    showDetails: Boolean = false,
     onClick: () -> Unit = {}
 ) {
     val levelName = GamificationRules.getLevelName(state.level)
@@ -106,6 +107,26 @@ fun GamificationProgressCard(
                     label = "Conquistas",
                     value = "${state.unlockedAchievements.size}",
                     iconColor = TealLight
+                )
+            }
+
+            if (showDetails) {
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text(
+                    text = "Mais sobre seu nível",
+                    color = TextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Você está no nível ${state.level} (${levelName}). Para chegar ao próximo nível, você precisa de ${nextLevelPoints - state.totalPoints} pontos extras.",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp
                 )
             }
         }

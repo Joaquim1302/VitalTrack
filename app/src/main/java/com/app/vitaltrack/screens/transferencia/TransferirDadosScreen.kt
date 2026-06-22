@@ -39,6 +39,7 @@ import com.app.vitaltrack.ui.widgets.VitalTrackBottomNavigation
 fun TransferirDadosScreen(
     onBackClick: () -> Unit,
     onNavigateToConfig: () -> Unit = {},
+    onNavigateToProgresso: () -> Unit = {},
     viewModel: ConfiguracoesViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -111,6 +112,7 @@ fun TransferirDadosScreen(
                         when (it) {
                             0 -> onBackClick()
                             1 -> {} // Já está em transferência
+                            2 -> onNavigateToProgresso()
                             3 -> onNavigateToConfig()
                         }
                     }

@@ -29,7 +29,7 @@ import com.app.vitaltrack.ui.widgets.*
 fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToGamification: () -> Unit,
+    onNavigateToProgresso: () -> Unit,
     onNavigateToMealRegistration: (String, Int) -> Unit,
     onNavigateToExport: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel()
@@ -66,10 +66,13 @@ fun DashboardScreen(
             bottomBar = {
                 VitalTrackBottomNavigation(
                     selectedItem = selectedTab,
-                    onItemClick = { 
-                        selectedTab = it 
-                        if (it == 3) onNavigateToConfig()
-                        if (it == 1) onNavigateToExport()
+                    onItemClick = {
+                        selectedTab = it
+                        when (it) {
+                            1 -> onNavigateToExport()
+                            2 -> onNavigateToProgresso()
+                            3 -> onNavigateToConfig()
+                        }
                     }
                 )
             }
@@ -95,15 +98,6 @@ fun DashboardScreen(
                         consumed = uiState.totalConsumed,
                         goal = uiState.calorieGoal
                     )
-                }
-
-                uiState.gamificationState?.let { gamificationState ->
-                    item {
-                        GamificationProgressCard(
-                            state = gamificationState,
-                            onClick = onNavigateToGamification
-                        )
-                    }
                 }
 
                 item {

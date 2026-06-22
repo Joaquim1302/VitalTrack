@@ -168,7 +168,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun reloadResumoDoDia() {
-        // A observação reativa via Flow já cuida da atualização, 
+        // A observação reativa via Flow já cuida da atualização,
         // mas podemos forçar um recarregamento se necessário.
     }
 }

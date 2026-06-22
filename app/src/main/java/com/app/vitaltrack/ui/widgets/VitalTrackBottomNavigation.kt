@@ -39,6 +39,7 @@ fun VitalTrackBottomNavigation(
             icon = { Icon(Icons.Default.Timeline, contentDescription = "Progresso") },
             label = { Text("Progresso") },
             selected = selectedItem == 2,
+            enabled = true,
             onClick = { onItemClick(2) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = TealLight,

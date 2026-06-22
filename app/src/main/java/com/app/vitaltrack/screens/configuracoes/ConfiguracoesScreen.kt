@@ -28,7 +28,8 @@ import com.app.vitaltrack.ui.widgets.VitalTrackBottomNavigation
 @Composable
 fun ConfiguracoesScreen(
     onBackClick: () -> Unit,
-    onNavigateToExport: () -> Unit = {}
+    onNavigateToExport: () -> Unit = {},
+    onNavigateToProgresso: () -> Unit = {}
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -54,6 +55,7 @@ fun ConfiguracoesScreen(
                         when (it) {
                             0 -> onBackClick()
                             1 -> onNavigateToExport()
+                            2 -> onNavigateToProgresso()
                             3 -> {} // Já está em configurações
                         }
                     }
