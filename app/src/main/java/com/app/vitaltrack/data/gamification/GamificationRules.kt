@@ -45,10 +45,14 @@ object GamificationRules {
 
     fun calculateLevel(totalPoints: Int): Int {
         return when {
-            totalPoints >= 1000 -> 5
-            totalPoints >= 500 -> 4
-            totalPoints >= 250 -> 3
-            totalPoints >= 100 -> 2
+            totalPoints >= 50000 -> 9
+            totalPoints >= 30000 -> 8
+            totalPoints >= 20000 -> 7
+            totalPoints >= 12000 -> 6
+            totalPoints >= 7000 -> 5
+            totalPoints >= 3500 -> 4
+            totalPoints >= 1000 -> 3
+            totalPoints >= 500 -> 2
             else -> 1
         }
     }
@@ -56,38 +60,50 @@ object GamificationRules {
     fun getLevelName(level: Int): String {
         return when (level) {
             1 -> "Iniciante"
-            2 -> "Em movimento"
-            3 -> "Focado"
+            2 -> "Iniciado"
+            3 -> "Determinado"
             4 -> "Consistente"
             5 -> "Atleta VitalTrack"
+            6 -> "Amador Avançado"
+            7 -> "Elite VitalTrack"
+            8 -> "Rei da Montanha"
+            9 -> "Escalador Profissional"
             else -> "Iniciante"
         }
     }
 
     fun getNextLevelPoints(level: Int): Int {
         return when (level) {
-            1 -> 100
-            2 -> 250
-            3 -> 500
-            4 -> 1000
-            else -> 1000
+            1 -> 500
+            2 -> 1000
+            3 -> 3500
+            4 -> 7000
+            5 -> 12000
+            6 -> 20000
+            7 -> 30000
+            8 -> 50000
+            else -> 50000
         }
     }
 
     fun getCurrentLevelBasePoints(level: Int): Int {
         return when (level) {
             1 -> 0
-            2 -> 100
-            3 -> 250
-            4 -> 500
-            5 -> 1000
+            2 -> 500
+            3 -> 1000
+            4 -> 3500
+            5 -> 7000
+            6 -> 12000
+            7 -> 20000
+            8 -> 30000
+            9 -> 50000
             else -> 0
         }
     }
 
     fun calculateLevelProgress(totalPoints: Int): Float {
         val level = calculateLevel(totalPoints)
-        if (level >= 5) return 1f
+        if (level >= 9) return 1f
 
         val base = getCurrentLevelBasePoints(level)
         val next = getNextLevelPoints(level)
