@@ -1,5 +1,6 @@
 package com.app.vitaltrack.ui.widgets
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,9 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.app.vitaltrack.R
 import com.app.vitaltrack.data.gamification.GamificationRules
 import com.app.vitaltrack.data.gamification.GamificationState
 import com.app.vitaltrack.ui.theme.*
@@ -32,6 +37,7 @@ fun GamificationProgressCard(
     val levelName = GamificationRules.getLevelName(state.level)
     val progress = GamificationRules.calculateLevelProgress(state.totalPoints)
     val nextLevelPoints = GamificationRules.getNextLevelPoints(state.level)
+    val iconHeight = with(LocalDensity.current) { 330.toDp() }
 
     Box(
         modifier = modifier
@@ -42,7 +48,17 @@ fun GamificationProgressCard(
             .clickable { onClick() }
             .padding(16.dp)
     ) {
-        Column {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Image(
+                painter = painterResource(id = getLevelIconRes(state.level)),
+                contentDescription = "Ícone do nível ${state.level}",
+                modifier = Modifier
+                    .height(iconHeight)
+                    .wrapContentWidth()
+                    .align(Alignment.CenterHorizontally),
+                contentScale = ContentScale.Fit
+            )
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -119,17 +135,34 @@ fun GamificationProgressCard(
                     text = "Mais sobre seu nível",
                     color = TextPrimary,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Start)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Você está no nível ${state.level} (${levelName}). Para chegar ao próximo nível, você precisa de ${nextLevelPoints - state.totalPoints} pontos extras.",
                     color = TextSecondary,
                     fontSize = 12.sp,
-                    lineHeight = 18.sp
+                    lineHeight = 18.sp,
+                    modifier = Modifier.align(Alignment.Start)
                 )
             }
         }
+    }
+}
+
+private fun getLevelIconRes(level: Int): Int {
+    return when (level.coerceIn(1, 9)) {
+        1 -> R.drawable.level_1
+        2 -> R.drawable.level_2
+        3 -> R.drawable.level_3
+        4 -> R.drawable.level_4
+        5 -> R.drawable.level_5
+        6 -> R.drawable.level_6
+        7 -> R.drawable.level_7
+        8 -> R.drawable.level_8
+        9 -> R.drawable.level_9
+        else -> R.drawable.level_1
     }
 }
 
