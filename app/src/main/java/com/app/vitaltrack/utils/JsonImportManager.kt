@@ -1,16 +1,11 @@
 package com.app.vitaltrack.utils
 
-import android.util.Log
 import com.app.vitaltrack.data.entity.*
 import com.app.vitaltrack.repository.ImportRepository
 import org.json.JSONObject
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 class JsonImportManager(private val repository: ImportRepository) {
-
-    private val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
 
     suspend fun importFromJson(jsonString: String): String {
         val root = JSONObject(jsonString)
@@ -25,20 +20,15 @@ class JsonImportManager(private val repository: ImportRepository) {
                 val id = obj.getLong("CD_CLIENTE")
                 importedClientIds.add(id)
                 
-                val dtNascimento: Date? = when {
-                    obj.isNull("DT_NASCIMENTO") -> null
-                    obj.get("DT_NASCIMENTO") is Long -> Date(obj.getLong("DT_NASCIMENTO"))
-                    obj.get("DT_NASCIMENTO") is String -> {
-                        val dateStr = obj.getString("DT_NASCIMENTO")
-                        try {
-                            if (dateStr.contains("T")) isoFormat.parse(dateStr)
-                            else SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(dateStr)
-                        } catch (e: Exception) {
-                            Log.e("JsonImportManager", "Erro ao converter data: $dateStr", e)
-                            null
-                        }
+                val dtNascimento: Date? = if (obj.isNull("DT_NASCIMENTO")) {
+                    null
+                } else {
+                    val rawValue = obj.get("DT_NASCIMENTO")
+                    if (rawValue is Long) {
+                        Date(rawValue)
+                    } else {
+                        JsonDateUtils.jsonDateToDate(obj.optString("DT_NASCIMENTO"))
                     }
-                    else -> null
                 }
 
                 clientes.add(ClienteEntity(
@@ -100,7 +90,59 @@ class JsonImportManager(private val repository: ImportRepository) {
             repository.importAlimentos(alimentos)
         }
 
-        // 5. Processar tb_DT_refeicoes_itens
+        // 5. Processar tb_DT_exercicios_tipos
+        if (root.has("tb_DT_exercicios_tipos")) {
+            val array = root.getJSONArray("tb_DT_exercicios_tipos")
+            val entities = mutableListOf<ExercicioTipoEntity>()
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                entities.add(ExercicioTipoEntity(
+                    cdTpExercicio = obj.getInt("CD_TP_EXERCICIO"),
+                    dsTpExercicio = obj.optString("DS_TP_EXERCICIO"),
+                    blTpExercicio = if (obj.isNull("BL_TP_EXERCICIO")) null else obj.getBoolean("BL_TP_EXERCICIO")
+                ))
+            }
+            repository.importExercicioTipos(entities)
+        }
+
+        // 6. Processar tb_DT_pesagens
+        if (root.has("tb_DT_pesagens")) {
+            val array = root.getJSONArray("tb_DT_pesagens")
+            val entities = mutableListOf<PesagemEntity>()
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                entities.add(PesagemEntity(
+                    cdCliente = obj.getLong("CD_CLIENTE"),
+                    cdFase = obj.getInt("CD_FASE"),
+                    dtPesagem = JsonDateUtils.jsonDateToDate(obj.getString("DT_PESAGEM")) ?: Date(),
+                    nmPeso = if (obj.isNull("NM_PESO")) null else obj.getDouble("NM_PESO"),
+                    nmPercentGord = if (obj.isNull("NM_PERCENT_GORD")) null else obj.getDouble("NM_PERCENT_GORD"),
+                    hrPesagem = JsonDateUtils.jsonDateTimeToDate(obj.getString("HR_PESAGEM")) ?: Date()
+                ))
+            }
+            repository.importPesagens(entities)
+        }
+
+        // 7. Processar tb_DT_exercicios
+        if (root.has("tb_DT_exercicios")) {
+            val array = root.getJSONArray("tb_DT_exercicios")
+            val entities = mutableListOf<ExercicioEntity>()
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                entities.add(ExercicioEntity(
+                    cdExercicio = obj.getLong("CD_EXERCICIO"),
+                    nmCal = if (obj.isNull("NM_CAL")) null else obj.getDouble("NM_CAL"),
+                    cdPeriodo = if (obj.isNull("CD_PERIODO")) null else obj.getInt("CD_PERIODO"),
+                    cdFase = if (obj.isNull("CD_FASE")) null else obj.getInt("CD_FASE"),
+                    cdCliente = obj.getLong("CD_CLIENTE"),
+                    cdTpExercicio = if (obj.isNull("CD_TP_EXERCICIO")) null else obj.getInt("CD_TP_EXERCICIO"),
+                    dtDia = JsonDateUtils.jsonDateToDate(obj.optString("DT_DIA"))
+                ))
+            }
+            repository.importExercicios(entities)
+        }
+
+        // 8. Processar tb_DT_refeicoes_itens
         if (root.has("tb_DT_refeicoes_itens")) {
             val itensArray = root.getJSONArray("tb_DT_refeicoes_itens")
             val itens = mutableListOf<RefeicaoItemEntity>()
@@ -114,8 +156,17 @@ class JsonImportManager(private val repository: ImportRepository) {
                     missingClientIds.add(clientId)
                 }
 
+                val rawDtConsumo = obj.getString("DT_CONSUMO")
+                val dtConsumo = if (rawDtConsumo.contains(" ")) {
+                    rawDtConsumo.substringBefore(" ")
+                } else if (rawDtConsumo.contains("T")) {
+                    rawDtConsumo.substringBefore("T")
+                } else {
+                    rawDtConsumo
+                }
+
                 itens.add(RefeicaoItemEntity(
-                    dtConsumo = obj.getString("DT_CONSUMO"),
+                    dtConsumo = dtConsumo,
                     cdAlimento = obj.getLong("CD_ALIMENTO"),
                     cdCliente = clientId,
                     cdFase = if (obj.isNull("CD_FASE")) null else obj.getInt("CD_FASE"),

@@ -1,0 +1,207 @@
+=== INVENTÁRIO DO BANCO DE DADOS ===
+Gerado em: 24/06/2026 11:25:37
+============================================================
+
+Tabela: Itens do Menu de Controle
+   Campo: SwitchboardID | Tipo: Long
+   Campo: ItemNumber | Tipo: INTEGER
+   Campo: ItemText | Tipo: Texto
+   Campo: Command | Tipo: INTEGER
+   Campo: Argument | Tipo: Texto
+   Campo: ImgName | Tipo: Texto
+----------------------------------------
+Tabela: tb_baterias
+   Campo: id_bateria | Tipo: Long
+   Campo: ds_bateria | Tipo: Texto
+   Campo: dt_bateria | Tipo: Data/Hora
+   Campo: nm_atividades | Tipo: INTEGER
+   Campo: nm_km | Tipo: INTEGER
+   Campo: nm_horas | Tipo: Long
+----------------------------------------
+Tabela: tb_DT_alimentos
+   Campo: CD_ALIMENTO | Tipo: Long
+   Campo: CD_ALIMENTO_TP | Tipo: INTEGER
+   Campo: DS_ALIMENTO | Tipo: Texto
+   Campo: CD_UNIDADE | Tipo: Long
+   Campo: NM_QNT_BASE | Tipo: Double
+   Campo: NM_PONTOS | Tipo: Double
+   Campo: NM_CAL | Tipo: Double
+   Campo: NM_PROT | Tipo: Double
+   Campo: NM_CARB | Tipo: Double
+   Campo: NM_GORD | Tipo: Double
+   Campo: BL_UP_PALM | Tipo: Booleano
+   Campo: BL_ROCHE | Tipo: Booleano
+   Campo: DS_ALIMENTO_S_ACENTO | Tipo: Texto
+----------------------------------------
+Tabela: tb_DT_alimentos_tipos
+   Campo: CD_ALIMENTO_TP | Tipo: INTEGER
+   Campo: DS_ALIMENTO_TP | Tipo: Texto
+----------------------------------------
+Tabela: tb_DT_arch_mytarget
+   Campo: Título | Tipo: Texto
+   Campo: DataHora | Tipo: Data/Hora
+   Campo: Partida padrão | Tipo: Texto
+   Campo: Indoor | Tipo: Texto
+   Campo: Arco | Tipo: Texto
+   Campo: Flecha | Tipo: Texto
+   Campo: Partida | Tipo: Texto
+   Campo: Distância | Tipo: Texto
+   Campo: Alvo | Tipo: Texto
+   Campo: Série | Tipo: Texto
+   Campo: Pontos | Tipo: Outro (2)
+   Campo: Números de Flecha | Tipo: Texto
+   Campo: x | Tipo: Double
+   Campo: y | Tipo: Double
+----------------------------------------
+Tabela: tb_DT_arch_mytarget_import
+   Campo: Título | Tipo: Texto
+   Campo: Data | Tipo: Texto
+   Campo: Partida padrão | Tipo: Texto
+   Campo: Indoor | Tipo: Texto
+   Campo: Arco | Tipo: Texto
+   Campo: Flecha | Tipo: Texto
+   Campo: Partida | Tipo: Texto
+   Campo: Distância | Tipo: Texto
+   Campo: Alvo | Tipo: Texto
+   Campo: Série | Tipo: Texto
+   Campo: Horário | Tipo: Texto
+   Campo: Pontos | Tipo: Texto
+   Campo: Números de Flecha | Tipo: Texto
+   Campo: x | Tipo: Double
+   Campo: y | Tipo: Double
+----------------------------------------
+Tabela: tb_DT_arch_sections
+   Campo: cd_section | Tipo: Long
+   Campo: cd_archer | Tipo: Long
+   Campo: dt_dia | Tipo: Data/Hora
+   Campo: dt_hora | Tipo: Data/Hora
+----------------------------------------
+Tabela: tb_DT_arch_sets
+   Campo: cd_set | Tipo: Long
+   Campo: nm_set | Tipo: Long
+   Campo: cd_section | Tipo: Long
+   Campo: nm_points | Tipo: Long
+   Campo: nm_arrows | Tipo: Outro (2)
+   Campo: n_10e5 | Tipo: Outro (2)
+   Campo: n_10e4 | Tipo: Outro (2)
+   Campo: n_10e3 | Tipo: Outro (2)
+   Campo: n_10e2 | Tipo: Outro (2)
+   Campo: n_10e1 | Tipo: Outro (2)
+   Campo: n_out | Tipo: INTEGER
+   Campo: nm_points_mp | Tipo: Single
+   Campo: nm_aproveitamento | Tipo: Single
+----------------------------------------
+Tabela: tb_DT_clientes
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: DS_NOME | Tipo: Texto
+   Campo: CD_SEXO | Tipo: Texto
+   Campo: DT_NASCIMENTO | Tipo: Data/Hora
+   Campo: CD_ATIVIDADE | Tipo: Outro (2)
+   Campo: NM_ALTURA | Tipo: Single
+   Campo: DT_INICIO_bak | Tipo: Data/Hora
+   Campo: NM_PONTOS_META_bak | Tipo: INTEGER
+   Campo: NM_PESO_META_bak | Tipo: Single
+   Campo: BL_ATIVO | Tipo: Booleano
+----------------------------------------
+Tabela: tb_DT_composição_alimentos
+   Campo: CD_COMP | Tipo: Long
+   Campo: CD_COMP_ITEM | Tipo: Long
+   Campo: NM_QNT_ITEM | Tipo: Single
+----------------------------------------
+Tabela: tb_DT_DF
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: DT_INICIO_CALENDARIO | Tipo: Data/Hora
+   Campo: CD_TP_EXERCICIO | Tipo: Outro (2)
+   Campo: DT_VERSÃO | Tipo: Data/Hora
+----------------------------------------
+Tabela: tb_DT_exercicios
+   Campo: CD_EXERCICIO | Tipo: Long
+   Campo: NM_CAL | Tipo: Single
+   Campo: CD_PERIODO | Tipo: Outro (2)
+   Campo: CD_FASE | Tipo: Outro (2)
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: CD_TP_EXERCICIO | Tipo: Outro (2)
+   Campo: DT_DIA | Tipo: Data/Hora
+   Campo: NM_TEMPO | Tipo: Single
+   Campo: NM_DISTANCIA | Tipo: Single
+   Campo: CD_INTENSIDADE | Tipo: Long
+   Campo: NM_PONTOS | Tipo: Single
+   Campo: NM_FC | Tipo: Outro (2)
+   Campo: NM_FC_I | Tipo: Outro (2)
+   Campo: NM_FC_MD | Tipo: Outro (2)
+   Campo: NM_FC_MAX | Tipo: Outro (2)
+   Campo: TX_OBS | Tipo: Texto
+   Campo: ID_ATIVIDADE | Tipo: Long
+----------------------------------------
+Tabela: tb_DT_exercicios_METs
+   Campo: ID_ATIVIDADE | Tipo: Long
+   Campo: TP_ATIVIDADE | Tipo: Texto
+   Campo: DS_ATIVIDADE | Tipo: Texto
+   Campo: MET | Tipo: Outro (2)
+   Campo: BL_ATIVIDADE | Tipo: Booleano
+   Campo: CD_TP_EXERCICIO | Tipo: Outro (2)
+----------------------------------------
+Tabela: tb_DT_exercicios_METs_ENG
+   Campo: ID_ATIVIDADE | Tipo: Double
+   Campo: TP_ATIVIDADE | Tipo: Texto
+   Campo: DS_ATIVIDADE | Tipo: Texto
+   Campo: MET | Tipo: Double
+----------------------------------------
+Tabela: tb_DT_exercicios_tipos
+   Campo: CD_TP_EXERCICIO | Tipo: Outro (2)
+   Campo: DS_TP_EXERCICIO | Tipo: Texto
+   Campo: BL_TP_EXERCICIO | Tipo: Booleano
+----------------------------------------
+Tabela: tb_DT_fases
+   Campo: CD_FASE | Tipo: Outro (2)
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: DT_CONSULTA | Tipo: Data/Hora
+   Campo: BL_PERIODO_ATIVO | Tipo: Booleano
+   Campo: NM_AGUA | Tipo: Single
+   Campo: NM_GORDURA | Tipo: Single
+   Campo: NM_MASSA_MAGRA | Tipo: Single
+   Campo: NM_GORDURA_META | Tipo: Single
+   Campo: NM_MASSA_MAGRA_META | Tipo: Single
+   Campo: NM_PONTOS | Tipo: INTEGER
+   Campo: DS_FASE | Tipo: Texto
+   Campo: NM_FC_LIMIAR_TESTE | Tipo: Outro (2)
+----------------------------------------
+Tabela: tb_DT_nutrientes
+   Campo: CD_NUTRIENTE | Tipo: Outro (2)
+   Campo: DS_NUTRIENTE | Tipo: Texto
+----------------------------------------
+Tabela: tb_DT_pesagens
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: CD_FASE | Tipo: Outro (2)
+   Campo: DT_PESAGEM | Tipo: Data/Hora
+   Campo: NM_PESO | Tipo: Single
+   Campo: NM_PERCENT_GORD | Tipo: Single
+   Campo: HR_PESAGEM | Tipo: Data/Hora
+----------------------------------------
+Tabela: tb_DT_refeicoes_itens
+   Campo: CD_ALIMENTO | Tipo: Long
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: CD_FASE | Tipo: Outro (2)
+   Campo: CD_REFEICAO_TP | Tipo: Outro (2)
+   Campo: DT_CONSUMO | Tipo: Data/Hora
+   Campo: NM_QNT | Tipo: Single
+   Campo: CD_REFEICAO_ITEM_APP | Tipo: Outro (2)
+----------------------------------------
+Tabela: tb_DT_refeicoes_itens_app
+   Campo: CD_ALIMENTO | Tipo: Long
+   Campo: CD_CLIENTE | Tipo: Long
+   Campo: CD_FASE | Tipo: Outro (2)
+   Campo: CD_REFEICAO_TP | Tipo: Outro (2)
+   Campo: DT_CONSUMO | Tipo: Data/Hora
+   Campo: NM_QNT | Tipo: Single
+   Campo: CD_REFEICAO_ITEM_APP | Tipo: Outro (2)
+----------------------------------------
+Tabela: tb_DT_refeicoes_tipos
+   Campo: CD_REFEICAO_TP | Tipo: Outro (2)
+   Campo: DS_REFEICAO_TP | Tipo: Texto
+   Campo: CD_ORDEM | Tipo: Texto
+----------------------------------------
+Tabela: tb_DT_unidades
+   Campo: CD_UNIDADE | Tipo: Long
+   Campo: DS_UNIDADE | Tipo: Texto
+----------------------------------------

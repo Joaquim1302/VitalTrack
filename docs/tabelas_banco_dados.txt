@@ -1,0 +1,92 @@
+ESTRUTURA DO BANCO DE DADOS ROOM - VITALTRACK
+
+1. Clientes (tb_DT_clientes)
+- CD_CLIENTE (Long): Chave Primaria
+- DS_NOME (String): Nome do cliente
+- CD_SEXO (String?): Genero
+- DT_NASCIMENTO (Date?): Data de nascimento
+- NM_ALTURA (Double?): Altura do cliente
+
+2. Alimentos (tb_DT_alimentos)
+- CD_ALIMENTO (Long): Chave Primaria
+- DS_ALIMENTO (String?): Descricao do alimento
+- CD_UNIDADE (Int?): ID da unidade de medida
+- NM_QNT_BASE (Long?): Quantidade base para os nutrientes
+- NM_CAL (Double?): Calorias (kcal)
+- NM_PROT (Double?): Proteinas (g)
+- NM_CARB (Double?): Carboidratos (g)
+- NM_GORD (Double?): Gorduras (g)
+
+3. Itens de Refeicao (tb_DT_refeicoes_itens)
+- DT_CONSUMO (String): Chave Primaria (Parte 1)
+- CD_ALIMENTO (Long): Chave Primaria (Parte 2)
+- CD_CLIENTE (Long): Chave Primaria (Parte 3)
+- CD_REFEICAO_TP (Int): Chave Primaria (Parte 4)
+- CD_FASE (Int?): ID da fase
+- NM_QNT (Double?): Quantidade consumida
+- DS_UNIDADE (String?): Unidade utilizada
+- CD_REFEICAO_ITEM_APP (Int?): Marcacao para exportacao/gamificacao
+
+4. Tipos de Refeicao (tb_DT_refeicoes_tipos)
+- CD_REFEICAO_TP (Long): Chave Primaria
+- DS_REFEICAO_TP (String?): Descricao (Ex: Almoco)
+
+5. Unidades de Medida (tb_DT_unidades)
+- CD_UNIDADE (Long): Chave Primaria
+- DS_UNIDADE (String?): Descricao da unidade (Ex: gramas)
+
+6. Refeicoes Favoritas (tb_DT_refeicoes_favoritas)
+- CD_FAVORITA (Long): Chave Primaria (Auto-incremento)
+- DS_FAVORITA (String): Nome dado ao favorito
+- CD_REFEICAO_TP (Int?): ID do tipo de refeicao
+- DT_CRIACAO (Long): Timestamp de criacao
+
+7. Itens das Favoritas (tb_DT_refeicoes_favoritas_itens)
+- CD_FAVORITA (Long): Chave Primaria (Parte 1)
+- CD_ALIMENTO (Long): Chave Primaria (Parte 2)
+- NM_QNT (Double): Quantidade do item no favorito
+
+8. Refeicoes Salvas - Modelos (tb_DT_refeicoes_salvas)
+- CD_REFEICAO_SALVA (Long): Chave Primaria (Auto-incremento)
+- DS_REFEICAO_SALVA (String): Nome do modelo
+- CD_REFEICAO_TP (Int?): ID do tipo de refeicao
+- NM_CAL_TOTAL (Double): Total de calorias do modelo
+- NM_PROT_TOTAL (Double): Total de proteinas
+- NM_CARB_TOTAL (Double): Total de carboidratos
+- NM_GORD_TOTAL (Double): Total de gorduras
+- DT_CRIACAO (Long): Data de criacao
+- DT_ATUALIZACAO (Long): Data de atualizacao
+
+9. Itens das Refeicoes Salvas (tb_DT_refeicoes_salvas_itens)
+- CD_ITEM_REFEICAO_SALVA (Long): Chave Primaria (Auto-incremento)
+- CD_REFEICAO_SALVA (Long): FK para tb_DT_refeicoes_salvas
+- CD_ALIMENTO (Long): ID do alimento
+- DS_ALIMENTO (String): Descricao do alimento no momento em que salvou
+- NM_QTD (Double): Quantidade salva
+- DS_UNIDADE (String): Unidade salva
+- NM_CAL (Double): Calorias proporcionais
+- NM_PROT (Double): Proteinas proporcionais
+- NM_CARB (Double): Carboidratos proporcionais
+- NM_GORD (Double): Gorduras proporcionais
+
+10. Exercicios (tb_DT_exercicios)
+- CD_EXERCICIO (Long): Chave Primaria
+- NM_CAL (Double?): Calorias
+- CD_PERIODO (Int?): Periodo
+- CD_FASE (Int?): Fase
+- CD_CLIENTE (Long): ID do cliente
+- CD_TP_EXERCICIO (Int?): Tipo de exercicio
+- DT_DIA (Date?): Data da atividade
+
+11. Tipos de Exercicios (tb_DT_exercicios_tipos)
+- CD_TP_EXERCICIO (Int): Chave Primaria
+- DS_TP_EXERCICIO (String?): Descricao
+- BL_TP_EXERCICIO (Boolean?): Ativo (True/False)
+
+12. Pesagens (tb_DT_pesagens)
+- CD_CLIENTE (Long): Chave Primaria (Parte 1)
+- CD_FASE (Int): Chave Primaria (Parte 2)
+- DT_PESAGEM (Date): Chave Primaria (Parte 3)
+- NM_PESO (Double?): Peso
+- NM_PERCENT_GORD (Double?): % de Gordura
+- HR_PESAGEM (Date): Chave Primaria (Parte 4)

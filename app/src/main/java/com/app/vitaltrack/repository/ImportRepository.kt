@@ -38,4 +38,16 @@ class ImportRepository(
     suspend fun importClientes(clientes: List<ClienteEntity>) = withContext(Dispatchers.IO) {
         importDao.insertClientes(clientes)
     }
+
+    suspend fun importExercicios(exercicios: List<ExercicioEntity>) = withContext(Dispatchers.IO) {
+        db.exercicioDao().inserirExercicios(exercicios)
+    }
+
+    suspend fun importExercicioTipos(tipos: List<ExercicioTipoEntity>) = withContext(Dispatchers.IO) {
+        db.exercicioTipoDao().inserirTipos(tipos)
+    }
+
+    suspend fun importPesagens(pesagens: List<PesagemEntity>) = withContext(Dispatchers.IO) {
+        db.pesagemDao().inserirPesagens(pesagens)
+    }
 }

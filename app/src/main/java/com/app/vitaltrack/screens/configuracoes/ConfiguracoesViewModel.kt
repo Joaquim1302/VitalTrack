@@ -40,7 +40,7 @@ class ConfiguracoesViewModel(application: Application) : AndroidViewModel(applic
         val db = AppDatabase.getDatabase(application)
         repository = ImportRepository(db.importDao(), db)
         importManager = JsonImportManager(repository)
-        exportService = JsonExportService(application, db.mealDao())
+        exportService = JsonExportService(db)
     }
 
     private val _importState = MutableStateFlow<ImportState>(ImportState.Idle)

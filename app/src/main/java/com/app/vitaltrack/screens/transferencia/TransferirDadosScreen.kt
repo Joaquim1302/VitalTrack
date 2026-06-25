@@ -142,7 +142,7 @@ fun TransferirDadosScreen(
                     ExportCard(
                         isLoading = exportState is ExportState.Loading,
                         onExportClick = {
-                            exportLauncher.launch("vitaltrack_export.json")
+                            exportLauncher.launch("vt_export_to_access.json")
                         }
                     )
                 }

@@ -4,10 +4,7 @@ import android.content.Context
 import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.app.vitaltrack.data.dao.ClienteDao
-import com.app.vitaltrack.data.dao.ImportDao
-import com.app.vitaltrack.data.dao.MealDao
-import com.app.vitaltrack.data.dao.RefeicaoSalvaDao
+import com.app.vitaltrack.data.dao.*
 import com.app.vitaltrack.data.entity.*
 
 @Database(
@@ -20,10 +17,13 @@ import com.app.vitaltrack.data.entity.*
         RefeicaoFavoritaItemEntity::class,
         RefeicaoSalvaEntity::class,
         RefeicaoSalvaItemEntity::class,
-        ClienteEntity::class
+        ClienteEntity::class,
+        ExercicioEntity::class,
+        ExercicioTipoEntity::class,
+        PesagemEntity::class
     ],
-    version = 6,
-    exportSchema = false
+    version = 7,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -31,10 +31,49 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mealDao(): MealDao
     abstract fun refeicaoSalvaDao(): RefeicaoSalvaDao
     abstract fun clienteDao(): ClienteDao
+    abstract fun exercicioDao(): ExercicioDao
+    abstract fun exercicioTipoDao(): ExercicioTipoDao
+    abstract fun pesagemDao(): PesagemDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_exercicios (
+                        CD_EXERCICIO INTEGER NOT NULL, 
+                        NM_CAL REAL, 
+                        CD_PERIODO INTEGER, 
+                        CD_FASE INTEGER, 
+                        CD_CLIENTE INTEGER NOT NULL, 
+                        CD_TP_EXERCICIO INTEGER, 
+                        DT_DIA INTEGER, 
+                        PRIMARY KEY(CD_EXERCICIO)
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_exercicios_tipos (
+                        CD_TP_EXERCICIO INTEGER NOT NULL, 
+                        DS_TP_EXERCICIO TEXT, 
+                        BL_TP_EXERCICIO INTEGER, 
+                        PRIMARY KEY(CD_TP_EXERCICIO)
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_pesagens (
+                        CD_CLIENTE INTEGER NOT NULL, 
+                        CD_FASE INTEGER NOT NULL, 
+                        DT_PESAGEM INTEGER NOT NULL, 
+                        NM_PESO REAL, 
+                        NM_PERCENT_GORD REAL, 
+                        HR_PESAGEM INTEGER NOT NULL, 
+                        PRIMARY KEY(CD_CLIENTE, CD_FASE, DT_PESAGEM, HR_PESAGEM)
+                    )
+                """)
+            }
+        }
 
         val MIGRATION_5_6 = object : Migration(5, 6) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -93,12 +132,20 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "vitaltrack_database"
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6)
-                    .fallbackToDestructiveMigration() // Adicionado como segurança se faltar alguma migração intermediária
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .fallbackToDestructiveMigration(true)
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
                             db.execSQL("INSERT OR IGNORE INTO tb_DT_clientes (CD_CLIENTE, DS_NOME) VALUES (1, 'Joaquim')")
+                            
+                            // Inserir tipos iniciais de exercicio
+                            db.execSQL("INSERT OR IGNORE INTO tb_DT_exercicios_tipos (CD_TP_EXERCICIO, DS_TP_EXERCICIO, BL_TP_EXERCICIO) VALUES (1, 'Caminhada', 1)")
+                            db.execSQL("INSERT OR IGNORE INTO tb_DT_exercicios_tipos (CD_TP_EXERCICIO, DS_TP_EXERCICIO, BL_TP_EXERCICIO) VALUES (2, 'Corrida', 1)")
+                            db.execSQL("INSERT OR IGNORE INTO tb_DT_exercicios_tipos (CD_TP_EXERCICIO, DS_TP_EXERCICIO, BL_TP_EXERCICIO) VALUES (3, 'Ciclismo', 1)")
+                            db.execSQL("INSERT OR IGNORE INTO tb_DT_exercicios_tipos (CD_TP_EXERCICIO, DS_TP_EXERCICIO, BL_TP_EXERCICIO) VALUES (4, 'Musculacao', 1)")
+                            db.execSQL("INSERT OR IGNORE INTO tb_DT_exercicios_tipos (CD_TP_EXERCICIO, DS_TP_EXERCICIO, BL_TP_EXERCICIO) VALUES (5, 'Natacao', 1)")
+                            db.execSQL("INSERT OR IGNORE INTO tb_DT_exercicios_tipos (CD_TP_EXERCICIO, DS_TP_EXERCICIO, BL_TP_EXERCICIO) VALUES (6, 'Outro', 1)")
                         }
                     })
                     .build()

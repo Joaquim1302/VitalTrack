@@ -176,7 +176,7 @@ interface MealDao {
 
     @Query("""
         SELECT 
-            i.DT_CONSUMO || ' 00:00:00' as DT_CONSUMO,
+            i.DT_CONSUMO as DT_CONSUMO,
             i.CD_REFEICAO_TP,
             i.CD_ALIMENTO,
             i.CD_CLIENTE,

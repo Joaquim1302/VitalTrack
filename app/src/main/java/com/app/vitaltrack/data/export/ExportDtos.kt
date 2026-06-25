@@ -23,7 +23,10 @@ data class ExportRefeicoesDto(
     val tb_DT_clientes: List<ExportClienteDto> = emptyList(),
     val tb_DT_alimentos: List<ExportAlimentoDto> = emptyList(),
     val tb_DT_refeicoes_tipos: List<ExportRefeicaoTipoDto> = emptyList(),
-    val tb_DT_unidades: List<ExportUnidadeDto> = emptyList()
+    val tb_DT_unidades: List<ExportUnidadeDto> = emptyList(),
+    val tb_DT_pesagens: List<ExportPesagemDto> = emptyList(),
+    val tb_DT_exercicios: List<ExportExercicioDto> = emptyList(),
+    val tb_DT_exercicios_tipos: List<ExportExercicioTipoDto> = emptyList()
 )
 
 @Serializable
@@ -31,7 +34,7 @@ data class ExportClienteDto(
     val CD_CLIENTE: Long,
     val DS_NOME: String,
     val CD_SEXO: String? = null,
-    val DT_NASCIMENTO: Long? = null,
+    val DT_NASCIMENTO: String? = null,
     val NM_ALTURA: Double? = null
 )
 
@@ -57,4 +60,32 @@ data class ExportRefeicaoTipoDto(
 data class ExportUnidadeDto(
     val CD_UNIDADE: Long,
     val DS_UNIDADE: String?
+)
+
+@Serializable
+data class ExportPesagemDto(
+    val CD_CLIENTE: Long,
+    val CD_FASE: Int,
+    val DT_PESAGEM: String,
+    val NM_PESO: Double?,
+    val NM_PERCENT_GORD: Double?,
+    val HR_PESAGEM: String
+)
+
+@Serializable
+data class ExportExercicioDto(
+    val CD_EXERCICIO: Long,
+    val NM_CAL: Double?,
+    val CD_PERIODO: Int?,
+    val CD_FASE: Int?,
+    val CD_CLIENTE: Long,
+    val CD_TP_EXERCICIO: Int?,
+    val DT_DIA: String?
+)
+
+@Serializable
+data class ExportExercicioTipoDto(
+    val CD_TP_EXERCICIO: Int,
+    val DS_TP_EXERCICIO: String?,
+    val BL_TP_EXERCICIO: Boolean?
 )
