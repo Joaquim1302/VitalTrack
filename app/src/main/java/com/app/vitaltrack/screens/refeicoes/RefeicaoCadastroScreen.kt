@@ -20,8 +20,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,7 +50,7 @@ fun RefeicaoCadastroScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showCopyConfirmDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
-    
+
     val listStateSelecionados = rememberLazyListState()
     val listStateAlimentos = rememberLazyListState()
     val listStateRecentes = rememberLazyListState()
@@ -62,8 +65,8 @@ fun RefeicaoCadastroScreen(
             if (query.isEmpty()) {
                 uiState.allAvailableFoods
             } else {
-                uiState.allAvailableFoods.filter { 
-                    it.dsNormalized.contains(query) 
+                uiState.allAvailableFoods.filter {
+                    it.dsNormalized.contains(query)
                 }
             }
         }
@@ -88,8 +91,8 @@ fun RefeicaoCadastroScreen(
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(GradientTop, GradientBottom)))
     ) {
-        val totalCalories = uiState.alimentosSelecionados.sumOf { 
-            ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0) 
+        val totalCalories = uiState.alimentosSelecionados.sumOf {
+            ((it.nmQnt ?: 0.0) / (it.nmQntBase?.toDouble() ?: 1.0)) * (it.nmCal ?: 0.0)
         }
 
         Scaffold(
@@ -203,7 +206,7 @@ fun RefeicaoCadastroScreen(
                             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                 OutlinedTextField(
                                     value = searchQuery,
-                                    onValueChange = { 
+                                    onValueChange = {
                                         searchQuery = it
                                         viewModel.onSearchQueryChange(it)
                                     },
@@ -236,7 +239,7 @@ fun RefeicaoCadastroScreen(
                                             AlimentoDisponivelCard(
                                                 alimento = alimento,
                                                 isSelected = isSelected,
-                                                onSelect = { 
+                                                onSelect = {
                                                     if (isSelected) {
                                                         // Se já está selecionado, busca o item na lista para editar
                                                         val item = uiState.alimentosSelecionados.find { it.cdAlimento == alimento.cdAlimento }
@@ -338,8 +341,8 @@ fun RefeicaoCadastroScreen(
             AlertDialog(
                 onDismissRequest = { viewModel.cancelarRemocaoAlimento() },
                 title = { Text("Remover alimento?") },
-                text = { 
-                    Text("Deseja remover \"${uiState.alimentoParaRemover?.dsAlimento}\" da refeição?") 
+                text = {
+                    Text("Deseja remover \"${uiState.alimentoParaRemover?.dsAlimento}\" da refeição?")
                 },
                 confirmButton = {
                     TextButton(onClick = { viewModel.confirmarRemocaoAlimento() }) {
@@ -476,7 +479,7 @@ fun HeaderSection(title: String, totalCalories: Int, onBackClick: () -> Unit) {
             Text(title, color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             Text("Adicionar Alimentos", color = TextSecondary, fontSize = 12.sp)
         }
-        
+
         if (totalCalories > 0) {
             Column(horizontalAlignment = Alignment.End) {
                 Text(
@@ -546,7 +549,14 @@ fun CurrentItemRow(
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
-    val calorias = ((item.nmQnt ?: 0.0) / (item.nmQntBase?.toDouble() ?: 1.0)) * (item.nmCal ?: 0.0)
+    val qnt = item.nmQnt ?: 0.0
+    val calorias = (qnt / (item.nmQntBase?.toDouble() ?: 1.0)) * (item.nmCal ?: 0.0)
+
+    val formattedQnt = if (qnt % 1.0 == 0.0) {
+        qnt.toInt().toString()
+    } else {
+        String.format(Locale.forLanguageTag("pt-BR"), "%.2f", qnt)
+    }
 
     Row(
         modifier = Modifier
@@ -558,24 +568,17 @@ fun CurrentItemRow(
     ) {
         Column(Modifier.weight(1f)) {
             Text(
-                text = item.dsAlimento ?: "Alimento desconhecido",
+                text = buildAnnotatedString {
+                    append(item.dsAlimento ?: "Alimento desconhecido")
+                    append(" ")
+                    withStyle(style = SpanStyle(color = TextSecondary, fontWeight = FontWeight.Bold)) {
+                        append(" • [$formattedQnt] • ${calorias.toInt()} kcal")
+                    }
+                },
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
-            Row {
-                Text(
-                    text = "${item.nmQnt?.toInt() ?: 0} ${item.dsUnidade ?: ""}",
-                    color = TextSecondary,
-                    fontSize = 14.sp
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "•  ${calorias.toInt()} kcal",
-                    color = TextSecondary,
-                    fontSize = 14.sp
-                )
-            }
         }
 
         IconButton(
@@ -616,13 +619,13 @@ fun MostUsedFoodCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                
+
                 Text(
                     text = "${food.nmCal?.toInt() ?: 0} kcal / ${food.nmQntBase ?: 100} ${food.dsUnidade ?: ""}",
                     color = TextSecondary,
                     fontSize = 13.sp
                 )
-                
+
                 Text(
                     text = "Usado ${food.totalUsos} vezes",
                     color = TealLight,
@@ -630,7 +633,7 @@ fun MostUsedFoodCard(
                     fontSize = 11.sp
                 )
             }
-            
+
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                 contentDescription = null,
@@ -665,7 +668,7 @@ fun AlimentoRecentCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "${alimento.nmQnt?.toInt() ?: 0} ${alimento.dsUnidade ?: ""}  •  ${alimento.nmCal?.toInt() ?: 0} kcal",
@@ -673,7 +676,7 @@ fun AlimentoRecentCard(
                         fontSize = 13.sp
                     )
                 }
-                
+
                 val dataFormatada = try {
                     val dateString = if (alimento.dtConsumo.contains("T")) {
                         alimento.dtConsumo.split("T")[0]
@@ -693,7 +696,7 @@ fun AlimentoRecentCard(
                     fontSize = 11.sp
                 )
             }
-            
+
             Icon(
                 imageVector = Icons.Default.History,
                 contentDescription = null,
@@ -733,9 +736,9 @@ fun AlimentoDisponivelCard(
                     checkmarkColor = TextPrimary
                 )
             )
-            
+
             Spacer(Modifier.width(8.dp))
-            
+
             Column(Modifier.weight(1f)) {
                 Text(
                     text = alimento.dsAlimento ?: "",
@@ -743,20 +746,15 @@ fun AlimentoDisponivelCard(
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
                 )
-                
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val infoNutricional = listOfNotNull(
                         alimento.nmCal?.let { "${it.toInt()} kcal" }
-                        /* REMOVIDO PARA APARECER SOMENTE AS CALORIAS
-                        ,
-                        alimento.nmProt?.let { "P: ${it.toInt()}g" },
-                        alimento.nmCarb?.let { "C: ${it.toInt()}g" },
-                        alimento.nmGord?.let { "G: ${it.toInt()}g" }*/
                     ).joinToString("  •  ")
-                    
+
                     Text(
                         text = infoNutricional,
                         color = TextSecondary,
@@ -764,7 +762,7 @@ fun AlimentoDisponivelCard(
                     )
                 }
             }
-            
+
             Icon(
                 imageVector = if (isSelected) Icons.Default.Edit else Icons.Default.Add,
                 contentDescription = null,
@@ -808,7 +806,7 @@ fun RefeicaoSalvaCard(
         ),
         shape = RoundedCornerShape(12.dp),
         border = androidx.compose.foundation.BorderStroke(
-            if (isSelected) 1.dp else 0.5.dp, 
+            if (isSelected) 1.dp else 0.5.dp,
             if (isSelected) TealLight else CardBorder
         )
     ) {
@@ -823,26 +821,20 @@ fun RefeicaoSalvaCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
-                
+
                 Text(
                     text = "${template.calorias.toInt()} kcal • ${template.quantidadeItens} alimentos",
                     color = TealLight,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
                 )
-                /* REMOVIDO PARA APARECER SOMENTE AS CALORIAS
-                Text(
-                    text = "P: ${template.proteinas.toInt()}g | C: ${template.carboidratos.toInt()}g | G: ${template.gorduras.toInt()}g",
-                    color = TextSecondary,
-                    fontSize = 12.sp
-                )*/
             }
-            
+
             Row {
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Default.Delete, contentDescription = "Excluir", tint = Color.Red.copy(alpha = 0.6f))
                 }
-                
+
                 FilledIconButton(
                     onClick = onAdd,
                     colors = IconButtonDefaults.filledIconButtonColors(containerColor = TealLight)

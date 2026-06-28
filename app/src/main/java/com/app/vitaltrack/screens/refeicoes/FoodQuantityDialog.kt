@@ -1,20 +1,17 @@
 package com.app.vitaltrack.screens.refeicoes
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.util.Locale
 import com.app.vitaltrack.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodQuantityDialog(
     alimentoNome: String,
@@ -28,19 +25,14 @@ fun FoodQuantityDialog(
     onSalvar: (Double, String) -> Unit,
     onCancelar: () -> Unit
 ) {
-    var quantityStr by remember { mutableStateOf(initialQuantity.toString()) }
-    var unit by remember { mutableStateOf(initialUnit) }
-    var expanded by remember { mutableStateOf(false) }
-    val units = listOf("g", "ml", "fatia", "porção")
-
-    val quantity = quantityStr.toDoubleOrNull() ?: 0.0
-
-    // Cálculos nutricionais
-    val factor = if (baseQuantity > 0) quantity / baseQuantity else 0.0
-    val calcCal = baseCalories * factor
-    val calcProt = baseProt * factor
-    val calcCarb = baseCarb * factor
-    val calcGord = baseGord * factor
+    var quantityText by remember { mutableStateOf(if (initialQuantity == 0.0) "" else initialQuantity.toInt().toString()) }
+    val quantity = quantityText.toDoubleOrNull() ?: 0.0
+    
+    val factor = quantity / baseQuantity
+    val calories = baseCalories * factor
+    val prot = baseProt * factor
+    val carb = baseCarb * factor
+    val gord = baseGord * factor
 
     AlertDialog(
         onDismissRequest = onCancelar,
@@ -50,107 +42,47 @@ fun FoodQuantityDialog(
         title = {
             Text(
                 text = alimentoNome,
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Info Nutricional calculada
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    OutlinedTextField(
-                        value = quantityStr,
-                        onValueChange = { quantityStr = it },
-                        label = { Text("Quantidade") },
-                        modifier = Modifier.fillMaxWidth(), // Alterado de weight(1f) para fillMaxWidth()
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedBorderColor = TealLight,
-                            unfocusedBorderColor = CardBorder
-                        )
-                    )
-
-                    /* SELETOR DE UNIDADE COMENTADO PARA VERSÃO POSTERIOR
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = unit,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Unidade") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = TextPrimary,
-                                unfocusedTextColor = TextPrimary,
-                                focusedBorderColor = TealLight,
-                                unfocusedBorderColor = CardBorder
-                            )
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                            modifier = Modifier.background(BackgroundDark)
-                        ) {
-                            units.forEach { selectionOption ->
-                                DropdownMenuItem(
-                                    text = { Text(selectionOption, color = TextPrimary) },
-                                    onClick = {
-                                        unit = selectionOption
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    */
+                    NutriItem("Calorias", "${calories.toInt()} kcal")
+                    NutriItem("Prot", "${prot.toInt()}g")
+                    NutriItem("Carb", "${carb.toInt()}g")
+                    NutriItem("Gord", "${gord.toInt()}g")
                 }
 
-                // Painel Nutricional
-                Card(
+                OutlinedTextField(
+                    value = quantityText,
+                    onValueChange = { if (it.all { char -> char.isDigit() }) quantityText = it },
+                    label = { Text("Quantidade") },
+                    suffix = { Text(initialUnit) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = CardBackground),
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Informação Nutricional",
-                            color = TextPrimary,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
-                        )
-                        
-                        NutritionalItem("Calorias", String.format(Locale.getDefault(), "%.1f kcal", calcCal))
-                        NutritionalItem("Proteínas", String.format(Locale.getDefault(), "%.1f g", calcProt))
-                        NutritionalItem("Carboidratos", String.format(Locale.getDefault(), "%.1f g", calcCarb))
-                        NutritionalItem("Gorduras", String.format(Locale.getDefault(), "%.1f g", calcGord))
-                    }
-                }
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = TealLight,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = TealLight
+                    )
+                )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = {
-                    if (quantity > 0) {
-                        onSalvar(quantity, unit)
-                    }
-                },
+                onClick = { onSalvar(quantity, initialUnit) },
                 enabled = quantity > 0
             ) {
                 Text("Salvar", color = TealLight, fontWeight = FontWeight.Bold)
@@ -165,12 +97,9 @@ fun FoodQuantityDialog(
 }
 
 @Composable
-fun NutritionalItem(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(text = label, color = TextSecondary, fontSize = 12.sp)
-        Text(text = value, color = TextPrimary, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+private fun NutriItem(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = label, fontSize = 11.sp, color = TextSecondary)
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
     }
 }
