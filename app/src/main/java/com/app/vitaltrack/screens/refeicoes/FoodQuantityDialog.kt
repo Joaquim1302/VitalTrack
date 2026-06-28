@@ -25,8 +25,14 @@ fun FoodQuantityDialog(
     onSalvar: (Double, String) -> Unit,
     onCancelar: () -> Unit
 ) {
-    var quantityText by remember { mutableStateOf(if (initialQuantity == 0.0) "" else initialQuantity.toInt().toString()) }
-    val quantity = quantityText.toDoubleOrNull() ?: 0.0
+    var quantityText by remember { 
+        mutableStateOf(
+            if (initialQuantity == 0.0) "" 
+            else if (initialQuantity % 1.0 == 0.0) initialQuantity.toInt().toString()
+            else initialQuantity.toString().replace('.', ',')
+        ) 
+    }
+    val quantity = quantityText.replace(',', '.').toDoubleOrNull() ?: 0.0
     
     val factor = quantity / baseQuantity
     val calories = baseCalories * factor
@@ -64,11 +70,17 @@ fun FoodQuantityDialog(
 
                 OutlinedTextField(
                     value = quantityText,
-                    onValueChange = { if (it.all { char -> char.isDigit() }) quantityText = it },
+                    onValueChange = { input ->
+                        // Permite apenas dígitos e no máximo um separador decimal (ponto ou vírgula)
+                        if (input.isEmpty() || input.count { it == '.' || it == ',' } <= 1 && 
+                            input.all { it.isDigit() || it == '.' || it == ',' }) {
+                            quantityText = input
+                        }
+                    },
                     label = { Text("Quantidade") },
                     suffix = { Text(initialUnit) },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = TealLight,
