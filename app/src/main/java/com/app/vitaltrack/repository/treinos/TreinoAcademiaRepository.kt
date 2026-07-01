@@ -110,10 +110,18 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
         dao.atualizarSessao(concluida)
     }
 
-    suspend fun registrarSerieRealizada(serie: TreinoSerieEntity): Long = dao.inserirSerie(serie)
+    suspend fun registrarSerieRealizada(serie: TreinoSerieEntity): Long {
+        return if (serie.cdSerie == 0L) {
+            dao.inserirSerie(serie)
+        } else {
+            dao.atualizarSerie(serie)
+            serie.cdSerie
+        }
+    }
 
-    fun listarSeriesDaSessao(cdTreinoSessao: Long): Flow<List<TreinoSerieEntity>> = 
-        dao.listarSeriesPorSessao(cdTreinoSessao)
+    suspend fun buscarSeriesDaSessao(cdSessao: Long): List<TreinoSerieEntity> {
+        return dao.listarSeriesPorSessaoSync(cdSessao)
+    }
 
     suspend fun criarRegistroDeImportacao(importacao: TreinoImportacaoEntity): Long = 
         dao.inserirImportacao(importacao)

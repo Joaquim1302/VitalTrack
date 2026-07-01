@@ -82,7 +82,8 @@ fun NavGraph(navController: NavHostController) {
             val cdSessao = backStackEntry.arguments?.getLong("cdSessao") ?: 0L
             TreinoExecucaoScreen(
                 cdSessao = cdSessao,
-                onFinish = { onBack() }
+                onFinish = { onBack() },
+                onBack = { onBack() }
             )
         }
         composable(Screen.Settings.route) {

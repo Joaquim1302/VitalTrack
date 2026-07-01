@@ -14,22 +14,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.app.vitaltrack.screens.treinos.components.TreinoExercicioCard
+import com.app.vitaltrack.screens.treinos.components.ExerciseExecutionCard
 import com.app.vitaltrack.ui.theme.*
 
 @Composable
 fun TreinoExecucaoScreen(
     cdSessao: Long,
     onFinish: () -> Unit,
+    onBack: () -> Unit,
     viewModel: TreinoExecucaoViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(cdSessao) {
         viewModel.init(cdSessao)
@@ -56,7 +59,10 @@ fun TreinoExecucaoScreen(
                 TreinoExecucaoHeader(
                     diaNome = uiState.dia?.dsDia ?: "Treino",
                     diaGrupo = uiState.dia?.dsGrupoMuscular,
-                    onClose = onFinish
+                    onClose = { 
+                        android.widget.Toast.makeText(context, "Treino mantido em andamento.", android.widget.Toast.LENGTH_SHORT).show()
+                        onBack() 
+                    }
                 )
             }
         ) { innerPadding ->
@@ -72,15 +78,9 @@ fun TreinoExecucaoScreen(
                 ) {
                     TreinoSessaoStatusCard(
                         inicio = uiState.horarioInicioFormatado,
-                        duracao = uiState.duracaoFormatada
-                    )
-
-                    Text(
-                        text = "Exercícios Planejados",
-                        color = TextPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+                        duracao = uiState.duracaoFormatada,
+                        progresso = uiState.progresso,
+                        seriesStatus = "${uiState.seriesConcluidas} de ${uiState.totalSeries} séries"
                     )
 
                     LazyColumn(
@@ -89,10 +89,17 @@ fun TreinoExecucaoScreen(
                             .weight(1f)
                             .padding(horizontal = 20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 100.dp)
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
                     ) {
-                        items(uiState.exercicios) { exercicio ->
-                            TreinoExercicioCard(exercicio)
+                        items(uiState.exerciciosExecucao) { ex ->
+                            ExerciseExecutionCard(
+                                execucao = ex,
+                                onCargaChange = { nr, valStr -> viewModel.updateCarga(ex.exercicio.cdFichaExercicio, nr, valStr) },
+                                onRepsChange = { nr, valStr -> viewModel.updateRepeticoes(ex.exercicio.cdFichaExercicio, nr, valStr) },
+                                onAdjustCarga = { nr, delta -> viewModel.ajustarCarga(ex.exercicio.cdFichaExercicio, nr, delta) },
+                                onAdjustReps = { nr, delta -> viewModel.ajustarRepeticoes(ex.exercicio.cdFichaExercicio, nr, delta) },
+                                onConcluirSerie = { nr -> viewModel.concluirSerie(ex.exercicio.cdFichaExercicio, nr) }
+                            )
                         }
                     }
                 }
@@ -142,27 +149,6 @@ fun TreinoExecucaoScreen(
             textContentColor = TextSecondary
         )
     }
-
-    if (uiState.showCancelarDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.dismissCancelarDialog() },
-            title = { Text("Cancelar Treino") },
-            text = { Text("Deseja cancelar este treino? O treino ficará registrado como CANCELADO.") },
-            confirmButton = {
-                TextButton(onClick = { viewModel.confirmarCancelamento() }) {
-                    Text("Cancelar Treino", color = Color.Red)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { viewModel.dismissCancelarDialog() }) {
-                    Text("Manter Treino", color = TextSecondary)
-                }
-            },
-            containerColor = BackgroundDark,
-            titleContentColor = TextPrimary,
-            textContentColor = TextSecondary
-        )
-    }
 }
 
 @Composable
@@ -203,7 +189,9 @@ fun TreinoExecucaoHeader(
 @Composable
 fun TreinoSessaoStatusCard(
     inicio: String,
-    duracao: String
+    duracao: String,
+    progresso: Float,
+    seriesStatus: String
 ) {
     Card(
         modifier = Modifier
@@ -213,32 +201,47 @@ fun TreinoSessaoStatusCard(
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Início", color = TextSecondary, fontSize = 12.sp)
-                Text(inicio, color = TextPrimary, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-            
-            VerticalDivider(
-                modifier = Modifier.height(40.dp),
-                thickness = 1.dp,
-                color = CardBorder
-            )
-            
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Timer, contentDescription = null, tint = TealLight, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Duração", color = TextSecondary, fontSize = 12.sp)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Início", color = TextSecondary, fontSize = 12.sp)
+                    Text(inicio, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
-                Text(duracao, color = TealLight, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                
+                VerticalDivider(modifier = Modifier.height(30.dp), thickness = 1.dp, color = CardBorder)
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Timer, contentDescription = null, tint = TealLight, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Duração", color = TextSecondary, fontSize = 12.sp)
+                    }
+                    Text(duracao, color = TealLight, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+                VerticalDivider(modifier = Modifier.height(30.dp), thickness = 1.dp, color = CardBorder)
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Progresso", color = TextSecondary, fontSize = 12.sp)
+                    Text(seriesStatus, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LinearProgressIndicator(
+                progress = { progresso },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(CircleShape),
+                color = TealLight,
+                trackColor = CardBorder
+            )
         }
     }
 }

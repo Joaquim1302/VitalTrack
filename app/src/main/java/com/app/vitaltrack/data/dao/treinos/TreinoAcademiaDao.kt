@@ -43,6 +43,9 @@ interface TreinoAcademiaDao {
     @Query("SELECT * FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_DIA = :cdFichaDia ORDER BY NR_ORDEM")
     fun listarExerciciosPlanejados(cdFichaDia: Long): Flow<List<TreinoFichaExercicioEntity>>
 
+    @Query("SELECT * FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_DIA = :cdFichaDia ORDER BY NR_ORDEM")
+    suspend fun listarExerciciosPlanejadosSync(cdFichaDia: Long): List<TreinoFichaExercicioEntity>
+
     @Query("SELECT * FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_EXERCICIO = :cdFichaExercicio")
     suspend fun buscarExercicioPlanejado(cdFichaExercicio: Long): TreinoFichaExercicioEntity?
 
@@ -77,6 +80,9 @@ interface TreinoAcademiaDao {
 
     @Query("SELECT * FROM tb_DT_treinos_series WHERE CD_TREINO_SESSAO = :cdTreinoSessao ORDER BY CD_FICHA_EXERCICIO, NR_SERIE")
     fun listarSeriesPorSessao(cdTreinoSessao: Long): Flow<List<TreinoSerieEntity>>
+
+    @Query("SELECT * FROM tb_DT_treinos_series WHERE CD_TREINO_SESSAO = :cdTreinoSessao ORDER BY CD_FICHA_EXERCICIO, NR_SERIE")
+    suspend fun listarSeriesPorSessaoSync(cdTreinoSessao: Long): List<TreinoSerieEntity>
 
     @Query("SELECT * FROM tb_DT_treinos_series WHERE CD_TREINO_SESSAO = :cdTreinoSessao AND CD_FICHA_EXERCICIO = :cdFichaExercicio ORDER BY NR_SERIE")
     fun listarSeriesPorExercicio(cdTreinoSessao: Long, cdFichaExercicio: Long): Flow<List<TreinoSerieEntity>>

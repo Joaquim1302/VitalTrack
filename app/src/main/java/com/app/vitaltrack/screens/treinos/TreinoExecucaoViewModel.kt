@@ -3,9 +3,11 @@ package com.app.vitaltrack.screens.treinos
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.app.vitaltrack.data.entity.treinos.TreinoSerieEntity
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
+import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -27,29 +29,69 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
         val db = AppDatabase.getDatabase(application)
         repository = TreinoAcademiaRepository(db.treinoAcademiaDao())
         userPrefs = UserPreferencesRepository(application)
+        
+        userPrefs.userPreferencesFlow
+            .map { it.clienteAtivoId }
+            .distinctUntilChanged()
+            .onEach { id -> _uiState.update { it.copy(cdCliente = id) } }
+            .launchIn(viewModelScope)
     }
 
-    fun init(cdSessao: Long) {
+    fun init(cdSessao: Long, cdFichaDia: Long = 0) {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val sessao = repository.dao.buscarSessaoPorId(cdSessao)
-            if (sessao != null) {
-                val dia = repository.dao.buscarDia(sessao.cdFichaDia)
-                val exerciciosFlow = repository.listarExerciciosPlanejados(sessao.cdFichaDia)
-                
-                exerciciosFlow.collect { exercicios ->
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        sessao = sessao,
-                        dia = dia,
-                        exercicios = exercicios,
-                        horarioInicioFormatado = timeFormat.format(sessao.dtInicio)
-                    ) }
-                    startTimer(sessao.dtInicio)
-                }
-            } else {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Sessão não encontrada.") }
+            if (cdSessao != 0L) {
+                loadSessaoExistente(cdSessao)
+            } else if (cdFichaDia != 0L) {
+                garantirSessao(cdFichaDia)
             }
+        }
+    }
+
+    private suspend fun loadSessaoExistente(cdSessao: Long) {
+        val sessao = repository.dao.buscarSessaoPorId(cdSessao)
+        if (sessao != null) {
+            val dia = repository.dao.buscarDia(sessao.cdFichaDia)
+            val exerciciosPlanejados = repository.dao.listarExerciciosPlanejadosSync(sessao.cdFichaDia)
+            val seriesReais = repository.buscarSeriesDaSessao(cdSessao)
+
+            val exerciciosExecucao: List<TreinoExercicioExecucao> = exerciciosPlanejados.map { planejado ->
+                val seriesParaExercicio = seriesReais.filter { it.cdFichaExercicio == planejado.cdFichaExercicio }
+                val seriesUi = (1..planejado.nrSeriesPlanejadas).map { index ->
+                    val real = seriesParaExercicio.find { it.nrSerie == index }
+                    TreinoSerieUiModel(
+                        cdSerie = real?.cdSerie ?: 0L,
+                        nrSerie = index,
+                        carga = real?.nmCarga?.let { if ((it % 1f) == 0f) it.toInt().toString() else it.toString() } ?: "",
+                        repeticoes = real?.nrRepeticoes?.toString() ?: planejado.nrRepeticoesPlanejadas.toString(),
+                        concluida = real?.stConcluida ?: false,
+                    )
+                }
+                TreinoExercicioExecucao(planejado, seriesUi)
+            }
+
+            _uiState.update { it.copy(
+                isLoading = false,
+                sessao = sessao,
+                dia = dia,
+                exerciciosExecucao = exerciciosExecucao,
+                horarioInicioFormatado = timeFormat.format(sessao.dtInicio),
+                totalSeries = exerciciosExecucao.sumOf { it.series.size },
+                seriesConcluidas = exerciciosExecucao.sumOf { it.series.count { s -> s.concluida } }
+            ) }
+            startTimer(sessao.dtInicio)
+        } else {
+            _uiState.update { it.copy(isLoading = false, errorMessage = "Sessão não encontrada.") }
+        }
+    }
+
+    private suspend fun garantirSessao(cdFichaDia: Long) {
+        val clienteId = _uiState.value.cdCliente ?: return
+        val result = repository.garantirSessaoEmAndamento(clienteId, cdFichaDia)
+        when (result) {
+            is TreinoSessaoResult.SessaoCriada -> loadSessaoExistente(result.sessao.cdTreinoSessao)
+            is TreinoSessaoResult.SessaoRetomada -> loadSessaoExistente(result.sessao.cdTreinoSessao)
+            else -> _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao iniciar sessão.") }
         }
     }
 
@@ -75,6 +117,103 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
+    fun updateCarga(cdFichaExercicio: Long, nrSerie: Int, novaCarga: String) {
+        _uiState.update { state ->
+            val novosExercicios = state.exerciciosExecucao.map { ex ->
+                if (ex.exercicio.cdFichaExercicio == cdFichaExercicio) {
+                    val novasSeries = ex.series.map { s ->
+                        if (s.nrSerie == nrSerie) s.copy(carga = novaCarga) else s
+                    }
+                    ex.copy(series = novasSeries)
+                } else ex
+            }
+            state.copy(exerciciosExecucao = novosExercicios)
+        }
+    }
+
+    fun updateRepeticoes(cdFichaExercicio: Long, nrSerie: Int, novasReps: String) {
+        _uiState.update { state ->
+            val novosExercicios = state.exerciciosExecucao.map { ex ->
+                if (ex.exercicio.cdFichaExercicio == cdFichaExercicio) {
+                    val novasSeries = ex.series.map { s ->
+                        if (s.nrSerie == nrSerie) s.copy(repeticoes = novasReps) else s
+                    }
+                    ex.copy(series = novasSeries)
+                } else ex
+            }
+            state.copy(exerciciosExecucao = novosExercicios)
+        }
+    }
+
+    fun ajustarCarga(cdFichaExercicio: Long, nrSerie: Int, delta: Float) {
+        val ex = _uiState.value.exerciciosExecucao.find { it.exercicio.cdFichaExercicio == cdFichaExercicio } ?: return
+        val serie = ex.series.find { it.nrSerie == nrSerie } ?: return
+        val atual = serie.carga.replace(',', '.').toFloatOrNull() ?: 0f
+        val novo = (atual + delta).coerceAtLeast(0f)
+        val novoStr = if (novo % 1f == 0f) novo.toInt().toString() else String.format(Locale.getDefault(), "%.1f", novo).replace('.', ',')
+        updateCarga(cdFichaExercicio, nrSerie, novoStr)
+    }
+
+    fun ajustarRepeticoes(cdFichaExercicio: Long, nrSerie: Int, delta: Int) {
+        val ex = _uiState.value.exerciciosExecucao.find { it.exercicio.cdFichaExercicio == cdFichaExercicio } ?: return
+        val serie = ex.series.find { it.nrSerie == nrSerie } ?: return
+        val atual = serie.repeticoes.toIntOrNull() ?: 0
+        val novo = (atual + delta).coerceAtLeast(0)
+        updateRepeticoes(cdFichaExercicio, nrSerie, novo.toString())
+    }
+
+    fun concluirSerie(cdFichaExercicio: Long, nrSerie: Int) {
+        val sessao = _uiState.value.sessao ?: return
+        val exercicioExec = _uiState.value.exerciciosExecucao.find { it.exercicio.cdFichaExercicio == cdFichaExercicio } ?: return
+        val serieUi = exercicioExec.series.find { it.nrSerie == nrSerie } ?: return
+
+        viewModelScope.launch {
+            setSaving(cdFichaExercicio, nrSerie, true)
+
+            val serieEntity = TreinoSerieEntity(
+                cdSerie = serieUi.cdSerie,
+                cdTreinoSessao = sessao.cdTreinoSessao,
+                cdFichaExercicio = cdFichaExercicio,
+                nrSerie = nrSerie,
+                nmCarga = serieUi.carga.replace(',', '.').toFloatOrNull(),
+                nrRepeticoes = serieUi.repeticoes.toIntOrNull(),
+                stConcluida = true
+            )
+
+            val novoId = repository.registrarSerieRealizada(serieEntity)
+            
+            _uiState.update { state ->
+                val novosExercicios = state.exerciciosExecucao.map { ex ->
+                    if (ex.exercicio.cdFichaExercicio == cdFichaExercicio) {
+                        val novasSeries = ex.series.map { s ->
+                            when {
+                                s.nrSerie == nrSerie -> s.copy(cdSerie = novoId, concluida = true, isSaving = false)
+                                s.nrSerie == nrSerie + 1 && !s.concluida && s.carga.isEmpty() -> s.copy(carga = serieUi.carga)
+                                else -> s
+                            }
+                        }
+                        ex.copy(series = novasSeries)
+                    } else ex
+                }
+                state.copy(
+                    exerciciosExecucao = novosExercicios,
+                    seriesConcluidas = novosExercicios.sumOf { it.series.count { s -> s.concluida } }
+                )
+            }
+        }
+    }
+
+    private fun setSaving(cdFichaExercicio: Long, nrSerie: Int, saving: Boolean) {
+        _uiState.update { state ->
+            val novos = state.exerciciosExecucao.map { ex ->
+                if (ex.exercicio.cdFichaExercicio == cdFichaExercicio) {
+                    ex.copy(series = ex.series.map { s -> if (s.nrSerie == nrSerie) s.copy(isSaving = saving) else s })
+                } else ex
+            }
+            state.copy(exerciciosExecucao = novos)
+        }
+    }
+
     fun onConcluirClick() {
         _uiState.update { it.copy(showConcluirDialog = true) }
     }
@@ -93,28 +232,6 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
                 _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
             } else {
                 _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao concluir treino.") }
-            }
-        }
-    }
-
-    fun onCancelarClick() {
-        _uiState.update { it.copy(showCancelarDialog = true) }
-    }
-
-    fun dismissCancelarDialog() {
-        _uiState.update { it.copy(showCancelarDialog = false) }
-    }
-
-    fun confirmarCancelamento() {
-        val cdSessao = _uiState.value.sessao?.cdTreinoSessao ?: return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, showCancelarDialog = false) }
-            val result = repository.cancelarSessaoTreino(cdSessao, "Cancelado pelo usuário")
-            if (result != null) {
-                timerJob?.cancel()
-                _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
-            } else {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao cancelar treino.") }
             }
         }
     }
