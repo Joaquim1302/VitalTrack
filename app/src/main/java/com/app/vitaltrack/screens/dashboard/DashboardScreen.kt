@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +33,7 @@ fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToProgresso: () -> Unit,
+    onNavigateToGym: () -> Unit,
     onNavigateToMealRegistration: (String, Int) -> Unit,
     onNavigateToExport: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel()
@@ -98,6 +102,37 @@ fun DashboardScreen(
                         consumed = uiState.totalConsumed,
                         goal = uiState.calorieGoal
                     )
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToGym() },
+                        colors = CardDefaults.cardColors(containerColor = CardBackground),
+                        shape = RoundedCornerShape(20.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(TealLight.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(Icons.Default.FitnessCenter, contentDescription = null, tint = TealLight)
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            Column {
+                                Text("Treino de Academia", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Acesse sua ficha digital", color = TextSecondary, fontSize = 12.sp)
+                            }
+                        }
+                    }
                 }
 
                 item {

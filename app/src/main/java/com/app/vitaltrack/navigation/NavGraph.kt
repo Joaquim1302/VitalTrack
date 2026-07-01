@@ -13,6 +13,7 @@ import com.app.vitaltrack.screens.perfil.PerfilClienteScreen
 import com.app.vitaltrack.screens.progresso.ProgressoScreen
 import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
 import com.app.vitaltrack.screens.transferencia.TransferirDadosScreen
+import com.app.vitaltrack.screens.treinos.TreinoAcademiaScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -30,6 +31,9 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onNavigateToProgresso = {
                     navController.navigate(Screen.Progress.route)
+                },
+                onNavigateToGym = {
+                    navController.navigate(Screen.GymWorkout.route)
                 },
                 onNavigateToMealRegistration = { date, typeId ->
                     navController.navigate(Screen.MealRegistration.createRoute(date, typeId))
@@ -53,6 +57,9 @@ fun NavGraph(navController: NavHostController) {
         }
         composable(Screen.Gamification.route) {
             GamificationScreen(onBackClick = { onBack() })
+        }
+        composable(Screen.GymWorkout.route) {
+            TreinoAcademiaScreen(onBackClick = { onBack() })
         }
         composable(Screen.Settings.route) {
             ConfiguracoesScreen(
