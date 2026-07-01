@@ -5,7 +5,9 @@ import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.app.vitaltrack.data.dao.*
+import com.app.vitaltrack.data.dao.treinos.TreinoAcademiaDao
 import com.app.vitaltrack.data.entity.*
+import com.app.vitaltrack.data.entity.treinos.*
 
 @Database(
     entities = [
@@ -20,9 +22,15 @@ import com.app.vitaltrack.data.entity.*
         ClienteEntity::class,
         ExercicioEntity::class,
         ExercicioTipoEntity::class,
-        PesagemEntity::class
+        PesagemEntity::class,
+        TreinoFichaEntity::class,
+        TreinoFichaDiaEntity::class,
+        TreinoFichaExercicioEntity::class,
+        TreinoSessaoEntity::class,
+        TreinoSerieEntity::class,
+        TreinoImportacaoEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -34,10 +42,85 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun exercicioDao(): ExercicioDao
     abstract fun exercicioTipoDao(): ExercicioTipoDao
     abstract fun pesagemDao(): PesagemDao
+    abstract fun treinoAcademiaDao(): TreinoAcademiaDao
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_treinos_fichas (
+                        CD_FICHA INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        CD_CLIENTE INTEGER NOT NULL, 
+                        DS_FICHA TEXT NOT NULL, 
+                        DT_INICIO INTEGER NOT NULL, 
+                        DT_FIM INTEGER, 
+                        ST_ATIVA INTEGER NOT NULL, 
+                        DS_OBS TEXT
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_treinos_fichas_dias (
+                        CD_FICHA_DIA INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        CD_FICHA INTEGER NOT NULL, 
+                        DS_DIA TEXT NOT NULL, 
+                        NR_ORDEM INTEGER NOT NULL, 
+                        DS_GRUPO_MUSCULAR TEXT
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_treinos_fichas_exercicios (
+                        CD_FICHA_EXERCICIO INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        CD_FICHA_DIA INTEGER NOT NULL, 
+                        CD_EXERCICIO INTEGER NOT NULL, 
+                        NR_ORDEM INTEGER NOT NULL, 
+                        NR_SERIES_PLANEJADAS INTEGER NOT NULL, 
+                        NR_REPETICOES_PLANEJADAS INTEGER NOT NULL, 
+                        NM_CARGA_RECOMENDADA REAL, 
+                        NR_DESCANSO_SEGUNDOS INTEGER, 
+                        DS_OBS TEXT
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_treinos_sessoes (
+                        CD_TREINO_SESSAO INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        CD_CLIENTE INTEGER NOT NULL, 
+                        CD_FICHA_DIA INTEGER NOT NULL, 
+                        DT_INICIO INTEGER NOT NULL, 
+                        DT_FIM INTEGER, 
+                        ST_STATUS TEXT NOT NULL, 
+                        DS_ORIGEM TEXT NOT NULL, 
+                        DS_OBS TEXT
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_treinos_series (
+                        CD_SERIE INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        CD_TREINO_SESSAO INTEGER NOT NULL, 
+                        CD_FICHA_EXERCICIO INTEGER NOT NULL, 
+                        NR_SERIE INTEGER NOT NULL, 
+                        NM_CARGA REAL, 
+                        NR_REPETICOES INTEGER, 
+                        ST_CONCLUIDA INTEGER NOT NULL, 
+                        NM_ESFORCO REAL, 
+                        DS_OBS TEXT
+                    )
+                """)
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS tb_DT_treinos_importacoes (
+                        CD_IMPORTACAO INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+                        CD_CLIENTE INTEGER NOT NULL, 
+                        DT_IMPORTACAO INTEGER NOT NULL, 
+                        DS_ORIGEM TEXT NOT NULL, 
+                        DS_TEXTO_EXTRAIDO TEXT, 
+                        ST_STATUS TEXT NOT NULL, 
+                        DS_OBS TEXT
+                    )
+                """)
+            }
+        }
 
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -132,7 +215,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "vitaltrack_database"
                 )
-                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+                    .addMigrations(MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                     .fallbackToDestructiveMigration(true)
                     .addCallback(object : Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
