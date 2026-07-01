@@ -26,10 +26,81 @@ class TreinoAcademiaRepository(private val dao: TreinoAcademiaDao) {
     fun listarExerciciosPlanejados(cdFichaDia: Long): Flow<List<TreinoFichaExercicioEntity>> = 
         dao.listarExerciciosPlanejados(cdFichaDia)
 
-    suspend fun criarSessaoDeTreino(sessao: TreinoSessaoEntity): Long = dao.inserirSessao(sessao)
+    // Sessões de Treino - Ciclo de Vida
+
+    suspend fun iniciarSessaoTreino(cdCliente: Long, cdFichaDia: Long): TreinoSessaoResult {
+        val emAndamento = dao.buscarSessaoEmAndamento(cdCliente)
+        
+        if (emAndamento != null) {
+            return if (emAndamento.cdFichaDia == cdFichaDia) {
+                TreinoSessaoResult.SessaoRetomada(emAndamento)
+            } else {
+                TreinoSessaoResult.SessaoEmAndamentoDeOutroTreino(emAndamento)
+            }
+        }
+
+        val novaSessao = TreinoSessaoEntity(
+            cdCliente = cdCliente,
+            cdFichaDia = cdFichaDia,
+            dtInicio = Date(),
+            stStatus = TreinoSessaoEntity.STATUS_EM_ANDAMENTO,
+            dsOrigem = TreinoSessaoEntity.ORIGEM_APP
+        )
+
+        val id = dao.inserirSessao(novaSessao)
+        return TreinoSessaoResult.SessaoCriada(novaSessao.copy(cdTreinoSessao = id))
+    }
 
     suspend fun buscarSessaoEmAndamento(cdCliente: Long): TreinoSessaoEntity? = 
         dao.buscarSessaoEmAndamento(cdCliente)
+
+    suspend fun buscarSessaoEmAndamento(cdCliente: Long, cdFichaDia: Long): TreinoSessaoEntity? = 
+        dao.buscarSessaoEmAndamentoPorDia(cdCliente, cdFichaDia)
+
+    suspend fun concluirSessaoTreino(cdSessao: Long): TreinoSessaoEntity? {
+        val sessao = dao.buscarSessaoPorId(cdSessao) ?: return null
+        
+        if (sessao.stStatus == TreinoSessaoEntity.STATUS_EM_ANDAMENTO) {
+            val atualizada = sessao.copy(
+                stStatus = TreinoSessaoEntity.STATUS_CONCLUIDO,
+                dtFim = Date()
+            )
+            dao.atualizarSessao(atualizada)
+            return atualizada
+        }
+        return sessao
+    }
+
+    suspend fun cancelarSessaoTreino(cdSessao: Long, observacao: String? = null): TreinoSessaoEntity? {
+        val sessao = dao.buscarSessaoPorId(cdSessao) ?: return null
+        
+        val atualizada = sessao.copy(
+            stStatus = TreinoSessaoEntity.STATUS_CANCELADO,
+            dtFim = Date(),
+            dsObs = observacao ?: sessao.dsObs
+        )
+        dao.atualizarSessao(atualizada)
+        return atualizada
+    }
+
+    suspend fun garantirSessaoEmAndamento(cdCliente: Long, cdFichaDia: Long): TreinoSessaoResult {
+        val emAndamento = dao.buscarSessaoEmAndamento(cdCliente)
+        
+        if (emAndamento != null) {
+            return if (emAndamento.cdFichaDia == cdFichaDia) {
+                TreinoSessaoResult.SessaoRetomada(emAndamento)
+            } else {
+                TreinoSessaoResult.SessaoEmAndamentoDeOutroTreino(emAndamento)
+            }
+        }
+
+        // Se não existir nada em andamento para o cliente, cria uma nova
+        return iniciarSessaoTreino(cdCliente, cdFichaDia)
+    }
+
+    // Métodos legados/utilitários mantidos para compatibilidade
+
+    suspend fun criarSessaoDeTreino(sessao: TreinoSessaoEntity): Long = dao.inserirSessao(sessao)
 
     suspend fun concluirSessaoDeTreino(sessao: TreinoSessaoEntity) {
         val concluida = sessao.copy(

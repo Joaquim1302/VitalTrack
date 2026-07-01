@@ -56,6 +56,12 @@ interface TreinoAcademiaDao {
     @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_CLIENTE = :cdCliente AND ST_STATUS = 'EM_ANDAMENTO' LIMIT 1")
     suspend fun buscarSessaoEmAndamento(cdCliente: Long): TreinoSessaoEntity?
 
+    @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_CLIENTE = :cdCliente AND CD_FICHA_DIA = :cdFichaDia AND ST_STATUS = 'EM_ANDAMENTO' LIMIT 1")
+    suspend fun buscarSessaoEmAndamentoPorDia(cdCliente: Long, cdFichaDia: Long): TreinoSessaoEntity?
+
+    @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_TREINO_SESSAO = :cdSessao")
+    suspend fun buscarSessaoPorId(cdSessao: Long): TreinoSessaoEntity?
+
     @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_CLIENTE = :cdCliente ORDER BY DT_INICIO DESC")
     fun listarSessoes(cdCliente: Long): Flow<List<TreinoSessaoEntity>>
 
