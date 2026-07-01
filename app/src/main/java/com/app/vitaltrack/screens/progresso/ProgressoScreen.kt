@@ -25,6 +25,7 @@ import com.app.vitaltrack.ui.widgets.VitalTrackBottomNavigation
 @Composable
 fun ProgressoScreen(
     onBackClick: () -> Unit,
+    onNavigateToExercicios: () -> Unit,
     onNavigateToConfig: () -> Unit,
     onNavigateToExport: () -> Unit,
     onNavigateToGamification: () -> Unit,
@@ -52,9 +53,10 @@ fun ProgressoScreen(
                     onItemClick = { index ->
                         when (index) {
                             0 -> onBackClick()
-                            1 -> onNavigateToExport()
+                            1 -> onNavigateToExercicios()
                             2 -> {} // Já está em progresso
-                            3 -> onNavigateToConfig()
+                            3 -> onNavigateToExport()
+                            4 -> onNavigateToConfig()
                         }
                     }
                 )

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.app.vitaltrack.screens.treinos.components.*
 import com.app.vitaltrack.ui.theme.*
 
 @Composable
@@ -33,6 +34,8 @@ fun TreinoAcademiaScreen(
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
+                TreinoFichaHeader(
+                    ficha = uiState.fichaAtiva,
                     onBackClick = onBackClick
                 )
             }
@@ -42,13 +45,15 @@ fun TreinoAcademiaScreen(
                     CircularProgressIndicator(color = TealLight)
                 }
             } else if (uiState.isFichaVazia) {
+                TreinoEmptyState(onCriarExemplo = { viewModel.criarDadosExemplo() })
             } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
                 ) {
-                    // Divisões (Treino A, B, C...)
+                    // Seletor de treinos/divisões (Treino A, B, C...)
+                    TreinoDiaSelector(
                         divisoes = uiState.divisoes,
                         selecionada = uiState.divisaoSelecionada,
                         onSelect = { viewModel.selecionarDivisao(it) }
@@ -59,11 +64,14 @@ fun TreinoAcademiaScreen(
                             .fillMaxSize()
                             .padding(horizontal = 20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
                     ) {
                         items(uiState.exercicios) { exercicio ->
+                            TreinoExercicioCard(exercicio)
                         }
 
                         item {
+                            TreinoImportFichaCard()
                         }
                     }
                 }
@@ -72,6 +80,9 @@ fun TreinoAcademiaScreen(
 
         // Botão Iniciar Treino (Fixo no Rodapé)
         if (!uiState.isFichaVazia && uiState.divisaoSelecionada != null) {
+            TreinoIniciarButton(
+                cdFichaDia = uiState.divisaoSelecionada?.cdFichaDia,
+                onIniciarTreino = { /* TODO: Iniciar Sessão na Fase 3 */ }
             )
         }
     }

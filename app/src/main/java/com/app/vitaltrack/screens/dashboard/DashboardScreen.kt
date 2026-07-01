@@ -32,6 +32,7 @@ import com.app.vitaltrack.ui.widgets.*
 fun DashboardScreen(
     onNavigateToConfig: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToExercicios: () -> Unit,
     onNavigateToProgresso: () -> Unit,
     onNavigateToGym: () -> Unit,
     onNavigateToMealRegistration: (String, Int) -> Unit,
@@ -70,12 +71,13 @@ fun DashboardScreen(
             bottomBar = {
                 VitalTrackBottomNavigation(
                     selectedItem = selectedTab,
-                    onItemClick = {
-                        selectedTab = it
-                        when (it) {
-                            1 -> onNavigateToExport()
+                    onItemClick = { index ->
+                        selectedTab = index 
+                        when (index) {
+                            1 -> onNavigateToExercicios()
                             2 -> onNavigateToProgresso()
-                            3 -> onNavigateToConfig()
+                            3 -> onNavigateToExport()
+                            4 -> onNavigateToConfig()
                         }
                     }
                 )

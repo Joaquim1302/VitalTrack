@@ -28,6 +28,7 @@ import com.app.vitaltrack.ui.widgets.VitalTrackBottomNavigation
 @Composable
 fun ConfiguracoesScreen(
     onBackClick: () -> Unit,
+    onNavigateToExercicios: () -> Unit = {},
     onNavigateToExport: () -> Unit = {},
     onNavigateToProgresso: () -> Unit = {}
 ) {
@@ -50,13 +51,14 @@ fun ConfiguracoesScreen(
             },
             bottomBar = {
                 VitalTrackBottomNavigation(
-                    selectedItem = 3,
+                    selectedItem = 4,
                     onItemClick = { 
                         when (it) {
                             0 -> onBackClick()
-                            1 -> onNavigateToExport()
+                            1 -> onNavigateToExercicios()
                             2 -> onNavigateToProgresso()
-                            3 -> {} // Já está em configurações
+                            3 -> onNavigateToExport()
+                            4 -> {} // Já está em configurações
                         }
                     }
                 )

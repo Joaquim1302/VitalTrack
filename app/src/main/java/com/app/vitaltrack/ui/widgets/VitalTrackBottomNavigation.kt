@@ -1,8 +1,8 @@
 package com.app.vitaltrack.ui.widgets
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timeline
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.*
@@ -36,6 +36,20 @@ fun VitalTrackBottomNavigation(
         )
 
         NavigationBarItem(
+            icon = { Icon(Icons.Default.FitnessCenter, contentDescription = "Exercícios") },
+            label = { Text("Exercícios") },
+            selected = selectedItem == 1,
+            onClick = { onItemClick(1) },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = TealLight,
+                selectedTextColor = TealLight,
+                unselectedIconColor = Color.White.copy(alpha = 0.5f),
+                unselectedTextColor = Color.White.copy(alpha = 0.5f),
+                indicatorColor = Color.Transparent
+            )
+        )
+
+        NavigationBarItem(
             icon = { Icon(Icons.Default.Timeline, contentDescription = "Progresso") },
             label = { Text("Progresso") },
             selected = selectedItem == 2,
@@ -53,8 +67,8 @@ fun VitalTrackBottomNavigation(
         NavigationBarItem(
             icon = { Icon(Icons.Default.Upload, contentDescription = "Exportar para Access") },
             label = { Text("Exportar") },
-            selected = selectedItem == 1,
-            onClick = { onItemClick(1) },
+            selected = selectedItem == 3,
+            onClick = { onItemClick(3) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = TealLight,
                 selectedTextColor = TealLight,
@@ -64,12 +78,13 @@ fun VitalTrackBottomNavigation(
             )
         )
 
+/*
         NavigationBarItem(
             icon = { Icon(Icons.Default.Settings, contentDescription = "Config") },
             label = { Text("Config") },
-            selected = selectedItem == 3,
+            selected = selectedItem == 4,
             enabled = false,
-            onClick = { onItemClick(3) },
+            onClick = { onItemClick(4) },
             colors = NavigationBarItemDefaults.colors(
                 selectedIconColor = TealLight,
                 selectedTextColor = TealLight,
@@ -80,5 +95,6 @@ fun VitalTrackBottomNavigation(
                 indicatorColor = Color.Transparent
             )
         )
+*/
     }
 }

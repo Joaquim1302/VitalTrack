@@ -38,6 +38,7 @@ import com.app.vitaltrack.ui.widgets.VitalTrackBottomNavigation
 @Composable
 fun TransferirDadosScreen(
     onBackClick: () -> Unit,
+    onNavigateToExercicios: () -> Unit = {},
     onNavigateToConfig: () -> Unit = {},
     onNavigateToProgresso: () -> Unit = {},
     viewModel: ConfiguracoesViewModel = viewModel()
@@ -107,13 +108,14 @@ fun TransferirDadosScreen(
             },
             bottomBar = {
                 VitalTrackBottomNavigation(
-                    selectedItem = 1,
+                    selectedItem = 3,
                     onItemClick = { 
                         when (it) {
                             0 -> onBackClick()
-                            1 -> {} // Já está em transferência
+                            1 -> onNavigateToExercicios()
                             2 -> onNavigateToProgresso()
-                            3 -> onNavigateToConfig()
+                            3 -> {} // Já está em transferência
+                            4 -> onNavigateToConfig()
                         }
                     }
                 )
