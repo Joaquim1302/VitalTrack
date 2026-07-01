@@ -9,9 +9,16 @@ import com.app.vitaltrack.data.entity.treinos.TreinoFichaExercicioEntity
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
+import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+
+sealed class TreinoAcademiaEvent {
+    data class NavegarParaExecucao(val cdSessao: Long) : TreinoAcademiaEvent()
+    data class MostrarErro(val mensagem: String) : TreinoAcademiaEvent()
+}
 
 data class TreinoAcademiaUiState(
     val clienteId: Long? = null,
@@ -30,6 +37,9 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
 
     private val _uiState = MutableStateFlow(TreinoAcademiaUiState())
     val uiState: StateFlow<TreinoAcademiaUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<TreinoAcademiaEvent>()
+    val events = _events.receiveAsFlow()
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -101,6 +111,28 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
             // carregarFichaAtiva será disparado pelo Flow se houver mudanças, 
             // mas como buscarFichaAtiva retorna um Flow de Ficha?, 
             // o collect em carregarFichaAtiva cuidará disso.
+        }
+    }
+
+    fun iniciarTreino(cdFichaDia: Long) {
+        val clienteId = _uiState.value.clienteId ?: return
+        viewModelScope.launch {
+            val result = repository.iniciarSessaoTreino(clienteId, cdFichaDia)
+            when (result) {
+                is TreinoSessaoResult.SessaoCriada -> {
+                    _events.send(TreinoAcademiaEvent.NavegarParaExecucao(result.sessao.cdTreinoSessao))
+                }
+                is TreinoSessaoResult.SessaoRetomada -> {
+                    _events.send(TreinoAcademiaEvent.NavegarParaExecucao(result.sessao.cdTreinoSessao))
+                }
+                is TreinoSessaoResult.SessaoEmAndamentoDeOutroTreino -> {
+                    _events.send(TreinoAcademiaEvent.MostrarErro("Já existe um treino de ${result.sessao.dsObs ?: "outro tipo"} em andamento."))
+                    // TODO: Futuramente oferecer opção de cancelar a anterior e iniciar esta
+                }
+                is TreinoSessaoResult.Erro -> {
+                    _events.send(TreinoAcademiaEvent.MostrarErro(result.mensagem))
+                }
+            }
         }
     }
 }

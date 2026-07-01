@@ -5,7 +5,7 @@ import com.app.vitaltrack.data.entity.treinos.*
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
-class TreinoAcademiaRepository(private val dao: TreinoAcademiaDao) {
+class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
 
     fun buscarFichaAtiva(cdCliente: Long): Flow<TreinoFichaEntity?> = dao.buscarFichaAtiva(cdCliente)
 

@@ -15,6 +15,7 @@ import com.app.vitaltrack.screens.progresso.ProgressoScreen
 import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
 import com.app.vitaltrack.screens.transferencia.TransferirDadosScreen
 import com.app.vitaltrack.screens.treinos.TreinoAcademiaScreen
+import com.app.vitaltrack.screens.treinos.TreinoExecucaoScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -67,7 +68,22 @@ fun NavGraph(navController: NavHostController) {
             GamificationScreen(onBackClick = { onBack() })
         }
         composable(Screen.GymWorkout.route) {
-            TreinoAcademiaScreen(onBackClick = { onBack() })
+            TreinoAcademiaScreen(
+                onBackClick = { onBack() },
+                onNavigateToExecution = { cdSessao ->
+                    navController.navigate(Screen.WorkoutExecution.createRoute(cdSessao))
+                }
+            )
+        }
+        composable(
+            route = Screen.WorkoutExecution.route,
+            arguments = listOf(navArgument("cdSessao") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val cdSessao = backStackEntry.arguments?.getLong("cdSessao") ?: 0L
+            TreinoExecucaoScreen(
+                cdSessao = cdSessao,
+                onFinish = { onBack() }
+            )
         }
         composable(Screen.Settings.route) {
             ConfiguracoesScreen(

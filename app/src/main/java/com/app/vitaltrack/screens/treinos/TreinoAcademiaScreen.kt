@@ -18,9 +18,24 @@ import com.app.vitaltrack.ui.theme.*
 @Composable
 fun TreinoAcademiaScreen(
     onBackClick: () -> Unit,
+    onNavigateToExecution: (Long) -> Unit,
     viewModel: TreinoAcademiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is TreinoAcademiaEvent.NavegarParaExecucao -> {
+                    onNavigateToExecution(event.cdSessao)
+                }
+                is TreinoAcademiaEvent.MostrarErro -> {
+                    android.widget.Toast.makeText(context, event.mensagem, android.widget.Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -78,11 +93,12 @@ fun TreinoAcademiaScreen(
             }
         }
 
-        // Botão Iniciar Treino (Fixo no Rodapé)
         if (!uiState.isFichaVazia && uiState.divisaoSelecionada != null) {
             TreinoIniciarButton(
                 cdFichaDia = uiState.divisaoSelecionada?.cdFichaDia,
-                onIniciarTreino = { /* TODO: Iniciar Sessão na Fase 3 */ }
+                onIniciarTreino = { cdFichaDia -> 
+                    viewModel.iniciarTreino(cdFichaDia)
+                }
             )
         }
     }
