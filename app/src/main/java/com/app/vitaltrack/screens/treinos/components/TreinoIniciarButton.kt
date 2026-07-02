@@ -26,7 +26,7 @@ fun TreinoIniciarButton(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
+            .padding(start = 20.dp, end = 20.dp, bottom = 55.dp, top = 20.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         Button(

@@ -26,8 +26,8 @@ class MarkdownTreinoParserTest {
         assertTrue(result is MarkdownTreinoParseResult.Success)
         val treinos = (result as MarkdownTreinoParseResult.Success).treinos
         assertEquals(2, treinos.size)
-        assertEquals("Treino A", treinos[0].nome)
-        assertEquals("Peito", treinos[0].grupoMuscular)
+        assertEquals("Treino A", treinos[0].dsDia)
+        assertEquals("Peito", treinos[0].dsGrupoMuscular)
         assertEquals(1, treinos[0].exercicios.size)
         assertEquals("Supino", treinos[0].exercicios[0].nome)
     }

@@ -32,7 +32,7 @@ fun TreinoAcademiaScreen(
         contract = ActivityResultContracts.OpenDocument(),
         onResult = { uri ->
             if (uri != null) {
-                onNavigateToMarkdown(uri)
+                viewModel.processarMarkdown(uri)
             }
         }
     )
@@ -42,6 +42,9 @@ fun TreinoAcademiaScreen(
             when (event) {
                 is TreinoAcademiaEvent.NavegarParaExecucao -> {
                     onNavigateToExecution(event.cdSessao)
+                }
+                is TreinoAcademiaEvent.NavegarParaImportacaoMarkdown -> {
+                    onNavigateToMarkdown(null)
                 }
                 is TreinoAcademiaEvent.MostrarErro -> {
                     android.widget.Toast.makeText(context, event.mensagem, android.widget.Toast.LENGTH_LONG).show()

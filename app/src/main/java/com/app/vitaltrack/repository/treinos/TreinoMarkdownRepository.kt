@@ -1,7 +1,7 @@
 package com.app.vitaltrack.repository.treinos
 
 import com.app.vitaltrack.data.markdown.MarkdownAssetReader
-import com.app.vitaltrack.data.markdown.MarkdownTreino
+import com.app.vitaltrack.data.markdown.TreinoMarkdownImportado
 import com.app.vitaltrack.data.markdown.MarkdownTreinoParseResult
 import com.app.vitaltrack.data.markdown.MarkdownTreinoParser
 import kotlinx.coroutines.Dispatchers
@@ -16,11 +16,8 @@ class TreinoMarkdownRepository(
     private val assetReader: MarkdownAssetReader,
     private val parser: MarkdownTreinoParser = MarkdownTreinoParser()
 ) {
-    private val _importedTreinos = MutableStateFlow<List<MarkdownTreino>>(emptyList())
-    val importedTreinos: StateFlow<List<MarkdownTreino>> = _importedTreinos.asStateFlow()
-
-    private val _activeMarkdownTreino = MutableStateFlow<MarkdownTreino?>(null)
-    val activeMarkdownTreino: StateFlow<MarkdownTreino?> = _activeMarkdownTreino.asStateFlow()
+    private val _importedResult = MutableStateFlow<TreinoMarkdownImportado?>(null)
+    val importedResult: StateFlow<TreinoMarkdownImportado?> = _importedResult.asStateFlow()
 
     suspend fun carregarTreinosDoMarkdown(): MarkdownTreinoParseResult = withContext(Dispatchers.IO) {
         val content = assetReader.readTreinamentoFile()
@@ -29,7 +26,7 @@ class TreinoMarkdownRepository(
         } else {
             val result = parser.parse(content)
             if (result is MarkdownTreinoParseResult.Success) {
-                _importedTreinos.value = result.treinos
+                _importedResult.value = result.resultado
             }
             result
         }
@@ -37,28 +34,26 @@ class TreinoMarkdownRepository(
 
     suspend fun carregarTreinosDeUri(context: Context, uri: Uri): MarkdownTreinoParseResult = withContext(Dispatchers.IO) {
         try {
+            // Log para debug (aparecerá no logcat se necessário)
+            println("VitalTrack: Tentando ler URI: $uri")
+            
             val content = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            if (content == null) {
-                MarkdownTreinoParseResult.Error("Não foi possível ler o conteúdo do arquivo.")
+            if (content == null || content.isBlank()) {
+                MarkdownTreinoParseResult.Error("O arquivo está vazio ou não pôde ser lido.")
             } else {
                 val result = parser.parse(content)
                 if (result is MarkdownTreinoParseResult.Success) {
-                    _importedTreinos.value = result.treinos
+                    _importedResult.value = result.resultado
                 }
                 result
             }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            MarkdownTreinoParseResult.Error("Erro de Permissão: O sistema impediu o acesso ao arquivo. Tente mover o arquivo para a pasta principal de Downloads.")
         } catch (e: Exception) {
             e.printStackTrace()
             MarkdownTreinoParseResult.Error("Erro ao ler o arquivo: ${e.message}")
         }
-    }
-
-    fun getTreinoByNome(nome: String): MarkdownTreino? {
-        return _importedTreinos.value.find { it.nome == nome }
-    }
-
-    fun setActiveTreino(treino: MarkdownTreino) {
-        _activeMarkdownTreino.value = treino
     }
 
     companion object {

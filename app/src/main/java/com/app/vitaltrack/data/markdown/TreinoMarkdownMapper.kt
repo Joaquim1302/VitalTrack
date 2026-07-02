@@ -2,45 +2,33 @@ package com.app.vitaltrack.data.markdown
 
 import com.app.vitaltrack.data.entity.treinos.TreinoFichaDiaEntity
 import com.app.vitaltrack.data.entity.treinos.TreinoFichaExercicioEntity
-import java.util.Date
 
 object TreinoMarkdownMapper {
 
-    /**
-     * Converte um treino do Markdown para a entidade de Dia da Ficha.
-     * Usamos IDs negativos temporários para indicar que são dados em memória/Markdown.
-     */
-    fun toFichaDiaEntity(markdownTreino: MarkdownTreino, index: Int): TreinoFichaDiaEntity {
+    fun toFichaDiaEntity(markdownTreino: TreinoDiaMarkdownImportado, index: Int, fichaId: Long): TreinoFichaDiaEntity {
         return TreinoFichaDiaEntity(
-            cdFichaDia = -(index + 1).toLong(), // ID negativo para Markdown
-            cdFicha = -1L,
-            dsDia = markdownTreino.nome,
+            cdFicha = fichaId,
+            dsDia = markdownTreino.dsDia,
             nrOrdem = index + 1,
-            dsGrupoMuscular = markdownTreino.grupoMuscular
+            dsGrupoMuscular = markdownTreino.dsGrupoMuscular
         )
     }
 
-    /**
-     * Converte um exercício do Markdown para a entidade de Exercício da Ficha.
-     */
     fun toFichaExercicioEntity(
-        markdownExercicio: MarkdownTreinoExercicio, 
-        diaId: Long, 
-        globalIndex: Int
+        markdownExercicio: TreinoExercicioMarkdownImportado, 
+        diaId: Long
     ): TreinoFichaExercicioEntity {
-        // Tentamos converter repetições para Int, se falhar usamos 0 e guardamos no dsObs
-        val repsInt = markdownExercicio.repeticoes.toIntOrNull() ?: 0
+        val repsInt = markdownExercicio.repeticoes?.replace(Regex("[^0-9]"), "")?.toIntOrNull() ?: 10
         
         return TreinoFichaExercicioEntity(
-            cdFichaExercicio = -(globalIndex + 1).toLong(), // ID negativo
             cdFichaDia = diaId,
-            cdExercicio = 0L, // TODO: Mapear com IDs reais se necessário
+            cdExercicio = 0L, 
             nrOrdem = markdownExercicio.ordem,
-            nrSeriesPlanejadas = markdownExercicio.series ?: 1,
+            nrSeriesPlanejadas = markdownExercicio.series ?: 3,
             nrRepeticoesPlanejadas = repsInt,
-            nmCargaRecomendada = markdownExercicio.carga?.replace(",", ".")?.toFloatOrNull(),
+            nmCargaRecomendada = markdownExercicio.carga?.replace(",", ".")?.replace(Regex("[^0-9.]"), "")?.toFloatOrNull(),
             nrDescansoSegundos = markdownExercicio.intervaloSegundos ?: 60,
-            dsObs = if (repsInt == 0) markdownExercicio.repeticoes else markdownExercicio.nome
+            dsObs = markdownExercicio.nome
         )
     }
 }

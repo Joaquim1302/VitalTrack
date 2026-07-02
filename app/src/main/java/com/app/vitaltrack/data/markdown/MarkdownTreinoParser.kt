@@ -9,12 +9,12 @@ class MarkdownTreinoParser {
     fun parse(content: String): MarkdownTreinoParseResult {
         if (content.isBlank()) return MarkdownTreinoParseResult.Error(DEFAULT_ERROR_MESSAGE)
 
-        val treinos = mutableListOf<MarkdownTreino>()
+        val treinos = mutableListOf<TreinoDiaMarkdownImportado>()
         val lines = content.lines()
-        
+
         var currentTreinoNome = ""
         var currentGrupoMuscular: String? = null
-        var currentExercicios = mutableListOf<MarkdownTreinoExercicio>()
+        var currentExercicios = mutableListOf<TreinoExercicioMarkdownImportado>()
         var foundTitle = false
 
         var i = 0
@@ -24,12 +24,12 @@ class MarkdownTreinoParser {
             if (line.startsWith("#")) {
                 // Se já tínhamos um treino sendo processado, salva ele
                 if (foundTitle && currentExercicios.isNotEmpty()) {
-                    treinos.add(MarkdownTreino(currentTreinoNome, currentGrupoMuscular, currentExercicios.toList()))
+                    treinos.add(TreinoDiaMarkdownImportado(currentTreinoNome, currentGrupoMuscular, currentExercicios.toList()))
                     currentExercicios = mutableListOf()
                 }
 
                 // Processa novo título
-                val titleContent = line.removePrefix("#").trim()
+                val titleContent = line.removePrefix("#").trim().removePrefix("#").trim() // Suporta # ou ##
                 if (titleContent.contains("—")) {
                     val parts = titleContent.split("—", limit = 2)
                     currentTreinoNome = parts[0].trim()
@@ -54,10 +54,14 @@ class MarkdownTreinoParser {
                 var ordem = 1
                 while (i < lines.size && lines[i].trim().startsWith("|")) {
                     val rowLine = lines[i].trim()
+                    if (rowLine.contains("---")) { // Pula linha separadora se o i+2 não foi suficiente
+                        i++
+                        continue
+                    }
                     val cells = rowLine.split("|")
                         .map { it.trim() }
                         .filterIndexed { index, _ -> index > 0 } // Remove o primeiro elemento vazio por causa do split em "|..."
-                    
+
                     if (cells.size >= 5) {
                         val nome = cells[0].replace("**", "").trim()
                         if (nome.isNotEmpty()) {
@@ -68,7 +72,7 @@ class MarkdownTreinoParser {
                             val intervalo = cells[4].toIntOrNull() ?: 60
 
                             currentExercicios.add(
-                                MarkdownTreinoExercicio(
+                                TreinoExercicioMarkdownImportado(
                                     ordem = ordem++,
                                     nome = nome,
                                     series = series,
@@ -89,13 +93,17 @@ class MarkdownTreinoParser {
 
         // Adiciona o último treino processado
         if (foundTitle && currentExercicios.isNotEmpty()) {
-            treinos.add(MarkdownTreino(currentTreinoNome, currentGrupoMuscular, currentExercicios.toList()))
+            treinos.add(TreinoDiaMarkdownImportado(currentTreinoNome, currentGrupoMuscular, currentExercicios.toList()))
         }
 
         return if (treinos.isEmpty()) {
             MarkdownTreinoParseResult.Error(DEFAULT_ERROR_MESSAGE)
         } else {
-            MarkdownTreinoParseResult.Success(treinos)
+            val fichaImportada = TreinoMarkdownImportado(
+                dsFicha = "Plano de Treino Importado",
+                dias = treinos
+            )
+            MarkdownTreinoParseResult.Success(fichaImportada)
         }
     }
 }

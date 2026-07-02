@@ -27,7 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.app.vitaltrack.data.markdown.MarkdownTreinoExercicio
+import com.app.vitaltrack.data.markdown.TreinoExercicioMarkdownImportado
 import com.app.vitaltrack.ui.theme.*
 
 @Composable
@@ -87,7 +87,7 @@ fun TreinoMarkdownImportScreen(
                 ) {
                     // Seletor de Treinos (Treino A, B, C...)
                     TreinoMarkdownSelector(
-                        treinos = uiState.treinos.map { it.nome },
+                        treinos = uiState.treinos.map { it.dsDia },
                         selecionadoIndex = uiState.treinoSelecionadoIndex,
                         onSelect = { viewModel.selecionarTreino(it) }
                     )
@@ -101,7 +101,7 @@ fun TreinoMarkdownImportScreen(
                     ) {
                         uiState.treinoSelecionado?.let { treino ->
                             item {
-                                treino.grupoMuscular?.let {
+                                treino.dsGrupoMuscular?.let {
                                     Text(
                                         text = it,
                                         color = TealLight,
@@ -208,7 +208,7 @@ fun TreinoMarkdownSelector(
 }
 
 @Composable
-fun MarkdownExercicioCard(exercicio: MarkdownTreinoExercicio) {
+fun MarkdownExercicioCard(exercicio: TreinoExercicioMarkdownImportado) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = CardBackground),

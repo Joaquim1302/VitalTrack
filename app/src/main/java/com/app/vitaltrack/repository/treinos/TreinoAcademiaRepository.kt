@@ -2,6 +2,7 @@ package com.app.vitaltrack.repository.treinos
 
 import com.app.vitaltrack.data.dao.treinos.TreinoAcademiaDao
 import com.app.vitaltrack.data.entity.treinos.*
+import com.app.vitaltrack.data.markdown.TreinoMarkdownImportado
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
 
@@ -176,5 +177,43 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
             dao.inserirExercicioPlanejado(TreinoFichaExercicioEntity(cdFichaDia = diaC, cdExercicio = 8, nrOrdem = 2, nrSeriesPlanejadas = 3, nrRepeticoesPlanejadas = 12, nrDescansoSegundos = 60, dsObs = "Cadeira extensora"))
             dao.inserirExercicioPlanejado(TreinoFichaExercicioEntity(cdFichaDia = diaC, cdExercicio = 9, nrOrdem = 3, nrSeriesPlanejadas = 3, nrRepeticoesPlanejadas = 12, nrDescansoSegundos = 60, dsObs = "Mesa flexora"))
         }
+    }
+
+    suspend fun importarFichaMarkdown(cdCliente: Long, fichaMarkdown: TreinoMarkdownImportado): Long {
+        // Desativar fichas anteriores
+        dao.desativarFichasAnteriores(cdCliente)
+        
+        // Criar a ficha principal
+        val fichaId = dao.inserirFicha(TreinoFichaEntity(
+            cdCliente = cdCliente,
+            dsFicha = fichaMarkdown.dsFicha,
+            dtInicio = Date(),
+            stAtiva = true
+        ))
+        
+        // Criar os dias e exercícios
+        fichaMarkdown.dias.forEachIndexed { index, diaMarkdown ->
+            val diaId = dao.inserirDia(TreinoFichaDiaEntity(
+                cdFicha = fichaId,
+                dsDia = diaMarkdown.dsDia,
+                nrOrdem = index + 1,
+                dsGrupoMuscular = diaMarkdown.dsGrupoMuscular
+            ))
+            
+            diaMarkdown.exercicios.forEach { exercicioMarkdown ->
+                dao.inserirExercicioPlanejado(TreinoFichaExercicioEntity(
+                    cdFichaDia = diaId,
+                    cdExercicio = 0L, 
+                    nrOrdem = exercicioMarkdown.ordem,
+                    nrSeriesPlanejadas = exercicioMarkdown.series ?: 3,
+                    nrRepeticoesPlanejadas = exercicioMarkdown.repeticoes?.replace(Regex("[^0-9]"), "")?.toIntOrNull() ?: 10,
+                    nmCargaRecomendada = exercicioMarkdown.carga?.replace(",", ".")?.replace(Regex("[^0-9.]"), "")?.toFloatOrNull(),
+                    nrDescansoSegundos = exercicioMarkdown.intervaloSegundos ?: 60,
+                    dsObs = exercicioMarkdown.nome
+                ))
+            }
+        }
+        
+        return fichaId
     }
 }
