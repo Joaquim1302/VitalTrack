@@ -9,6 +9,7 @@ sealed class Screen(val route: String) {
     object TransferData : Screen("transfer_data")
     object Gamification : Screen("gamification")
     object GymWorkout : Screen("gym_workout")
+    object TreinoMarkdownImport : Screen("treino_markdown_import")
     object WorkoutExecution : Screen("workout_execution/{cdSessao}") {
         fun createRoute(cdSessao: Long) = "workout_execution/$cdSessao"
     }

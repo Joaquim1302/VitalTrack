@@ -7,7 +7,10 @@ import com.app.vitaltrack.data.entity.treinos.TreinoSerieEntity
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
+import com.app.vitaltrack.repository.treinos.TreinoMarkdownRepository
 import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
+import com.app.vitaltrack.data.markdown.TreinoMarkdownMapper
+import com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -23,6 +26,7 @@ sealed class TreinoExecucaoEvent {
 class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: TreinoAcademiaRepository
     private val userPrefs: UserPreferencesRepository
+    private val markdownRepo: TreinoMarkdownRepository
 
     private val _uiState = MutableStateFlow(TreinoExecucaoUiState())
     val uiState: StateFlow<TreinoExecucaoUiState> = _uiState.asStateFlow()
@@ -38,6 +42,7 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
         val db = AppDatabase.getDatabase(application)
         repository = TreinoAcademiaRepository(db.treinoAcademiaDao())
         userPrefs = UserPreferencesRepository(application)
+        markdownRepo = TreinoMarkdownRepository.getInstance(application)
         
         userPrefs.userPreferencesFlow
             .map { it.clienteAtivoId }
@@ -49,11 +54,55 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
     fun init(cdSessao: Long, cdFichaDia: Long = 0) {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            if (cdSessao != 0L) {
+            if (cdSessao == TreinoAcademiaViewModel.MARKDOWN_SESSION_ID) {
+                loadSessaoMarkdown()
+            } else if (cdSessao != 0L) {
                 loadSessaoExistente(cdSessao)
             } else if (cdFichaDia != 0L) {
                 garantirSessao(cdFichaDia)
             }
+        }
+    }
+
+    private suspend fun loadSessaoMarkdown() {
+        val markdownTreino = markdownRepo.activeMarkdownTreino.value
+        if (markdownTreino != null) {
+            val dia = TreinoMarkdownMapper.toFichaDiaEntity(markdownTreino, 0)
+            val exerciciosExecucao = markdownTreino.exercicios.mapIndexed { index, e ->
+                val planejado = TreinoMarkdownMapper.toFichaExercicioEntity(e, dia.cdFichaDia, index)
+                val seriesUi = (1..planejado.nrSeriesPlanejadas).map { sIndex ->
+                    TreinoSerieUiModel(
+                        nrSerie = sIndex,
+                        carga = planejado.nmCargaRecomendada?.toString() ?: "",
+                        repeticoes = e.repeticoes,
+                        concluida = false
+                    )
+                }
+                TreinoExercicioExecucao(planejado, seriesUi)
+            }
+
+            // Sessão fictícia em memória
+            val sessaoMarkdown = TreinoSessaoEntity(
+                cdTreinoSessao = TreinoAcademiaViewModel.MARKDOWN_SESSION_ID,
+                cdCliente = _uiState.value.cdCliente ?: 0L,
+                cdFichaDia = dia.cdFichaDia,
+                dtInicio = Date(),
+                stStatus = TreinoSessaoEntity.STATUS_EM_ANDAMENTO,
+                dsOrigem = "MARKDOWN"
+            )
+
+            _uiState.update { it.copy(
+                isLoading = false,
+                sessao = sessaoMarkdown,
+                dia = dia,
+                exerciciosExecucao = exerciciosExecucao,
+                horarioInicioFormatado = timeFormat.format(sessaoMarkdown.dtInicio),
+                totalSeries = exerciciosExecucao.sumOf { it.series.size },
+                seriesConcluidas = 0
+            ) }
+            startTimer(sessaoMarkdown.dtInicio)
+        } else {
+            _uiState.update { it.copy(isLoading = false, errorMessage = "Plano Markdown não encontrado.") }
         }
     }
 
@@ -179,17 +228,19 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             setSaving(cdFichaExercicio, nrSerie, true)
 
-            val serieEntity = TreinoSerieEntity(
-                cdSerie = serieUi.cdSerie,
-                cdTreinoSessao = sessao.cdTreinoSessao,
-                cdFichaExercicio = cdFichaExercicio,
-                nrSerie = nrSerie,
-                nmCarga = serieUi.carga.replace(',', '.').toFloatOrNull(),
-                nrRepeticoes = serieUi.repeticoes.toIntOrNull(),
-                stConcluida = true
-            )
-
-            val novoId = repository.registrarSerieRealizada(serieEntity)
+            var novoId = 0L
+            if (sessao.cdTreinoSessao != TreinoAcademiaViewModel.MARKDOWN_SESSION_ID) {
+                val serieEntity = TreinoSerieEntity(
+                    cdSerie = serieUi.cdSerie,
+                    cdTreinoSessao = sessao.cdTreinoSessao,
+                    cdFichaExercicio = cdFichaExercicio,
+                    nrSerie = nrSerie,
+                    nmCarga = serieUi.carga.replace(',', '.').toFloatOrNull(),
+                    nrRepeticoes = serieUi.repeticoes.toIntOrNull(),
+                    stConcluida = true
+                )
+                novoId = repository.registrarSerieRealizada(serieEntity)
+            }
             
             _uiState.update { state ->
                 val novosExercicios = state.exerciciosExecucao.map { ex ->
@@ -294,16 +345,52 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
         _uiState.update { it.copy(showConcluirDialog = false) }
     }
 
+    fun onCancelarClick() {
+        _uiState.update { it.copy(showCancelarDialog = true) }
+    }
+
+    fun dismissCancelarDialog() {
+        _uiState.update { it.copy(showCancelarDialog = false) }
+    }
+
     fun confirmarConclusao() {
         val cdSessao = _uiState.value.sessao?.cdTreinoSessao ?: return
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, showConcluirDialog = false) }
-            val result = repository.concluirSessaoTreino(cdSessao)
-            if (result != null) {
+            
+            if (cdSessao == TreinoAcademiaViewModel.MARKDOWN_SESSION_ID) {
+                // Conclusão em memória para Markdown
+                delay(500) // Simula persistência
                 timerJob?.cancel()
                 _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
             } else {
-                _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao concluir treino.") }
+                val result = repository.concluirSessaoTreino(cdSessao)
+                if (result != null) {
+                    timerJob?.cancel()
+                    _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao concluir treino.") }
+                }
+            }
+        }
+    }
+
+    fun confirmarCancelamento() {
+        val cdSessao = _uiState.value.sessao?.cdTreinoSessao ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, showCancelarDialog = false) }
+            
+            if (cdSessao == TreinoAcademiaViewModel.MARKDOWN_SESSION_ID) {
+                timerJob?.cancel()
+                _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
+            } else {
+                val result = repository.cancelarSessaoTreino(cdSessao, "Cancelado pelo usuário")
+                if (result != null) {
+                    timerJob?.cancel()
+                    _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Erro ao cancelar treino.") }
+                }
             }
         }
     }

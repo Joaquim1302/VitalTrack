@@ -16,6 +16,7 @@ import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
 import com.app.vitaltrack.screens.transferencia.TransferirDadosScreen
 import com.app.vitaltrack.screens.treinos.TreinoAcademiaScreen
 import com.app.vitaltrack.screens.treinos.TreinoExecucaoScreen
+import com.app.vitaltrack.screens.treinos.TreinoMarkdownImportScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -72,6 +73,18 @@ fun NavGraph(navController: NavHostController) {
                 onBackClick = { onBack() },
                 onNavigateToExecution = { cdSessao ->
                     navController.navigate(Screen.WorkoutExecution.createRoute(cdSessao))
+                },
+                onNavigateToMarkdown = {
+                    navController.navigate(Screen.TreinoMarkdownImport.route)
+                }
+            )
+        }
+        composable(Screen.TreinoMarkdownImport.route) {
+            TreinoMarkdownImportScreen(
+                onBackClick = { onBack() },
+                onImportSuccess = { 
+                    // Volta para a tela de academia que agora vai ler do Markdown Repo
+                    onBack() 
                 }
             )
         }

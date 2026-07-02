@@ -44,6 +44,12 @@ fun ExerciseExecutionCard(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
+                    val repsText = if (execucao.exercicio.nrRepeticoesPlanejadas > 0) {
+                        execucao.exercicio.nrRepeticoesPlanejadas.toString()
+                    } else {
+                        execucao.exercicio.dsObs ?: "0"
+                    }
+                    
                     Text(
                         text = execucao.exercicio.dsObs ?: "Exercício",
                         color = TextPrimary,
@@ -51,7 +57,7 @@ fun ExerciseExecutionCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Planejado: ${execucao.exercicio.nrSeriesPlanejadas} x ${execucao.exercicio.nrRepeticoesPlanejadas} • Descanso: ${execucao.exercicio.nrDescansoSegundos ?: "padrão"}s",
+                        text = "Planejado: ${execucao.exercicio.nrSeriesPlanejadas} x $repsText • Descanso: ${execucao.exercicio.nrDescansoSegundos ?: "padrão"}s",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )

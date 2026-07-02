@@ -9,7 +9,9 @@ import com.app.vitaltrack.data.entity.treinos.TreinoFichaExercicioEntity
 import com.app.vitaltrack.database.AppDatabase
 import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
+import com.app.vitaltrack.repository.treinos.TreinoMarkdownRepository
 import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
+import com.app.vitaltrack.data.markdown.TreinoMarkdownMapper
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -27,13 +29,15 @@ data class TreinoAcademiaUiState(
     val divisaoSelecionada: TreinoFichaDiaEntity? = null,
     val exercicios: List<TreinoFichaExercicioEntity> = emptyList(),
     val isLoading: Boolean = false,
-    val isFichaVazia: Boolean = false
+    val isFichaVazia: Boolean = false,
+    val isMarkdownMode: Boolean = false
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: TreinoAcademiaRepository
     private val userPrefs: UserPreferencesRepository
+    private val markdownRepo: TreinoMarkdownRepository
 
     private val _uiState = MutableStateFlow(TreinoAcademiaUiState())
     val uiState: StateFlow<TreinoAcademiaUiState> = _uiState.asStateFlow()
@@ -45,8 +49,10 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
         val db = AppDatabase.getDatabase(application)
         repository = TreinoAcademiaRepository(db.treinoAcademiaDao())
         userPrefs = UserPreferencesRepository(application)
+        markdownRepo = TreinoMarkdownRepository.getInstance(application)
 
         observeClienteAtivo()
+        observeMarkdownTreino()
     }
 
     private fun observeClienteAtivo() {
@@ -55,11 +61,40 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
             .distinctUntilChanged()
             .onEach { id ->
                 _uiState.update { it.copy(clienteId = id) }
-                if (id != null) {
+                if (id != null && !_uiState.value.isMarkdownMode) {
                     carregarFichaAtiva(id)
                 }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun observeMarkdownTreino() {
+        markdownRepo.activeMarkdownTreino
+            .onEach { active ->
+                if (active != null) {
+                    _uiState.update { it.copy(isMarkdownMode = true) }
+                    carregarTreinosMarkdown()
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun carregarTreinosMarkdown() {
+        val imported = markdownRepo.importedTreinos.value
+        if (imported.isNotEmpty()) {
+            val divisoes = imported.mapIndexed { index, t -> 
+                TreinoMarkdownMapper.toFichaDiaEntity(t, index)
+            }
+            _uiState.update { it.copy(
+                divisoes = divisoes,
+                isFichaVazia = false,
+                isLoading = false
+            ) }
+            // Seleciona o primeiro se nenhum selecionado
+            if (_uiState.value.divisaoSelecionada == null) {
+                selecionarDivisao(divisoes.first())
+            }
+        }
     }
 
     private fun carregarFichaAtiva(clienteId: Long) {
@@ -96,10 +131,22 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
         _uiState.update { it.copy(divisaoSelecionada = divisao, isLoading = true) }
         
         viewModelScope.launch {
-            repository.listarExerciciosPlanejados(divisao.cdFichaDia)
-                .collect { exercicios ->
+            if (_uiState.value.isMarkdownMode) {
+                val markdownTreino = markdownRepo.getTreinoByNome(divisao.dsDia)
+                if (markdownTreino != null) {
+                    val exercicios = markdownTreino.exercicios.mapIndexed { index, e ->
+                        TreinoMarkdownMapper.toFichaExercicioEntity(e, divisao.cdFichaDia, index)
+                    }
                     _uiState.update { it.copy(exercicios = exercicios, isLoading = false) }
+                } else {
+                    _uiState.update { it.copy(isLoading = false) }
                 }
+            } else {
+                repository.listarExerciciosPlanejados(divisao.cdFichaDia)
+                    .collect { exercicios ->
+                        _uiState.update { it.copy(exercicios = exercicios, isLoading = false) }
+                    }
+            }
         }
     }
 
@@ -116,6 +163,15 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
 
     fun iniciarTreino(cdFichaDia: Long) {
         val clienteId = _uiState.value.clienteId ?: return
+        
+        if (_uiState.value.isMarkdownMode) {
+            // No modo Markdown, usamos um ID especial para a execução
+            viewModelScope.launch {
+                _events.send(TreinoAcademiaEvent.NavegarParaExecucao(MARKDOWN_SESSION_ID))
+            }
+            return
+        }
+
         viewModelScope.launch {
             val result = repository.iniciarSessaoTreino(clienteId, cdFichaDia)
             when (result) {
@@ -134,5 +190,9 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
                 }
             }
         }
+    }
+
+    companion object {
+        const val MARKDOWN_SESSION_ID = -1L
     }
 }

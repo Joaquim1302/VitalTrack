@@ -132,25 +132,36 @@ fun TreinoExecucaoScreen(
             }
         }
 
-        // Botão Concluir fixo no rodapé
+        // Botões de ação fixos no rodapé
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(20.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Button(
-                onClick = { viewModel.onConcluirClick() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TealLight),
-                shape = RoundedCornerShape(16.dp),
-                enabled = !uiState.isLoading
-            ) {
-                Icon(Icons.Default.Done, contentDescription = null, tint = TextPrimary)
-                Spacer(Modifier.width(8.dp))
-                Text("Concluir Treino", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                TextButton(
+                    onClick = { viewModel.onCancelarClick() },
+                    enabled = !uiState.isLoading
+                ) {
+                    Text("Cancelar Treino", color = Color.Red.copy(alpha = 0.7f), fontSize = 14.sp)
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Button(
+                    onClick = { viewModel.onConcluirClick() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TealLight),
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = !uiState.isLoading
+                ) {
+                    Icon(Icons.Default.Done, contentDescription = null, tint = TextPrimary)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Concluir Treino", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                }
             }
         }
 
@@ -202,6 +213,27 @@ fun TreinoExecucaoScreen(
             dismissButton = {
                 TextButton(onClick = { viewModel.dismissConcluirDialog() }) {
                     Text("Cancelar", color = TextSecondary)
+                }
+            },
+            containerColor = BackgroundDark,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary
+        )
+    }
+
+    if (uiState.showCancelarDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissCancelarDialog() },
+            title = { Text("Cancelar Treino") },
+            text = { Text("Deseja cancelar este treino? O treino ficará registrado como CANCELADO.") },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmarCancelamento() }) {
+                    Text("Cancelar Treino", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissCancelarDialog() }) {
+                    Text("Manter Treino", color = TextSecondary)
                 }
             },
             containerColor = BackgroundDark,

@@ -19,6 +19,7 @@ import com.app.vitaltrack.ui.theme.*
 fun TreinoAcademiaScreen(
     onBackClick: () -> Unit,
     onNavigateToExecution: (Long) -> Unit,
+    onNavigateToMarkdown: () -> Unit,
     viewModel: TreinoAcademiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -86,7 +87,7 @@ fun TreinoAcademiaScreen(
                         }
 
                         item {
-                            TreinoImportFichaCard()
+                            TreinoImportFichaCard(onImportMarkdown = onNavigateToMarkdown)
                         }
                     }
                 }
