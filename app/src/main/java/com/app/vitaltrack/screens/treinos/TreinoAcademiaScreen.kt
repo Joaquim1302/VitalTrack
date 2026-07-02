@@ -11,6 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.vitaltrack.screens.treinos.components.*
 import com.app.vitaltrack.ui.theme.*
@@ -19,10 +22,20 @@ import com.app.vitaltrack.ui.theme.*
 fun TreinoAcademiaScreen(
     onBackClick: () -> Unit,
     onNavigateToExecution: (Long) -> Unit,
+    onNavigateToMarkdown: (Uri?) -> Unit,
     viewModel: TreinoAcademiaViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+        onResult = { uri ->
+            if (uri != null) {
+                onNavigateToMarkdown(uri)
+            }
+        }
+    )
 
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
@@ -86,7 +99,16 @@ fun TreinoAcademiaScreen(
                         }
 
                         item {
-                            TreinoImportFichaCard()
+                            TreinoImportFichaCard(onImportMarkdown = {
+                                filePickerLauncher.launch(
+                                    arrayOf(
+                                        "text/markdown",
+                                        "text/x-markdown",
+                                        "text/plain",
+                                        "application/octet-stream"
+                                    )
+                                )
+                            })
                         }
                     }
                 }

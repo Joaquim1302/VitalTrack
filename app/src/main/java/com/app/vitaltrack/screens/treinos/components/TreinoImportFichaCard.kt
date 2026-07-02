@@ -16,7 +16,9 @@ import com.app.vitaltrack.ui.theme.CardBorder
 import com.app.vitaltrack.ui.theme.TextSecondary
 
 @Composable
-fun TreinoImportFichaCard() {
+fun TreinoImportFichaCard(
+    onImportMarkdown: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -52,6 +54,21 @@ fun TreinoImportFichaCard() {
                 textAlign = TextAlign.Center,
                 lineHeight = 16.sp
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = onImportMarkdown,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = com.app.vitaltrack.ui.theme.TealLight.copy(alpha = 0.2f),
+                    contentColor = com.app.vitaltrack.ui.theme.TealLight
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Ler treino do Markdown", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+            }
         }
     }
 }

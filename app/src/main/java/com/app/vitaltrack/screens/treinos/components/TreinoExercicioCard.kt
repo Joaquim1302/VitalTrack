@@ -59,8 +59,14 @@ fun TreinoExercicioCard(
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
+                val repsText = if (exercicio.nrRepeticoesPlanejadas > 0) {
+                    "${exercicio.nrRepeticoesPlanejadas} repetições"
+                } else {
+                    exercicio.dsObs ?: "repetições"
+                }
+
                 Text(
-                    text = "${exercicio.nrSeriesPlanejadas} séries x ${exercicio.nrRepeticoesPlanejadas} repetições",
+                    text = "${exercicio.nrSeriesPlanejadas} séries x $repsText",
                     color = TextPrimary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium
