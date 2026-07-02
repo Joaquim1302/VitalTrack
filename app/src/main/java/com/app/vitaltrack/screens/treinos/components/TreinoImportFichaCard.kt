@@ -46,6 +46,7 @@ fun TreinoImportFichaCard(
                 fontSize = 16.sp,
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
             )
+            /*
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Em breve você poderá importar uma foto, PDF ou texto da ficha e revisar antes de salvar.",
@@ -54,7 +55,7 @@ fun TreinoImportFichaCard(
                 textAlign = TextAlign.Center,
                 lineHeight = 16.sp
             )
-
+            */
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(

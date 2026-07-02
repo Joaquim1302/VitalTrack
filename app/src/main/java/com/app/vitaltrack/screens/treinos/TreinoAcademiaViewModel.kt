@@ -22,6 +22,7 @@ sealed class TreinoAcademiaEvent {
     data class NavegarParaExecucao(val cdSessao: Long) : TreinoAcademiaEvent()
     object NavegarParaImportacaoMarkdown : TreinoAcademiaEvent()
     data class MostrarErro(val mensagem: String) : TreinoAcademiaEvent()
+    data class MostrarDialogoConflito(val sessao: com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity) : TreinoAcademiaEvent()
 }
 
 data class TreinoAcademiaUiState(
@@ -125,11 +126,16 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
         }
     }
 
-    fun iniciarTreino(cdFichaDia: Long) {
+    fun iniciarTreino(cdFichaDia: Long, ignorarConflito: Boolean = false) {
         val clienteId = _uiState.value.clienteId ?: return
 
         viewModelScope.launch {
-            val result = repository.iniciarSessaoTreino(clienteId, cdFichaDia)
+            val result = if (ignorarConflito) {
+                repository.forcarNovaSessao(clienteId, cdFichaDia)
+            } else {
+                repository.iniciarSessaoTreino(clienteId, cdFichaDia)
+            }
+
             when (result) {
                 is TreinoSessaoResult.SessaoCriada -> {
                     _events.send(TreinoAcademiaEvent.NavegarParaExecucao(result.sessao.cdTreinoSessao))
@@ -138,7 +144,11 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
                     _events.send(TreinoAcademiaEvent.NavegarParaExecucao(result.sessao.cdTreinoSessao))
                 }
                 is TreinoSessaoResult.SessaoEmAndamentoDeOutroTreino -> {
+                    // Mantido por compatibilidade, mas o fluxo normal cairá em SessaoConflito
                     _events.send(TreinoAcademiaEvent.MostrarErro("Já existe um treino em andamento."))
+                }
+                is TreinoSessaoResult.SessaoConflito -> {
+                    _events.send(TreinoAcademiaEvent.MostrarDialogoConflito(result.sessao))
                 }
                 is TreinoSessaoResult.Erro -> {
                     _events.send(TreinoAcademiaEvent.MostrarErro(result.mensagem))

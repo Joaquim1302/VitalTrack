@@ -27,6 +27,7 @@ fun TreinoAcademiaScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    var sessaoConflito by remember { mutableStateOf<com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -46,11 +47,44 @@ fun TreinoAcademiaScreen(
                 is TreinoAcademiaEvent.NavegarParaImportacaoMarkdown -> {
                     onNavigateToMarkdown(null)
                 }
+                is TreinoAcademiaEvent.MostrarDialogoConflito -> {
+                    sessaoConflito = event.sessao
+                }
                 is TreinoAcademiaEvent.MostrarErro -> {
                     android.widget.Toast.makeText(context, event.mensagem, android.widget.Toast.LENGTH_LONG).show()
                 }
             }
         }
+    }
+
+    if (sessaoConflito != null) {
+        AlertDialog(
+            onDismissRequest = { sessaoConflito = null },
+            title = { Text("Treino em Andamento") },
+            text = { Text("Você já possui um treino em andamento. Deseja finalizar o treino anterior e iniciar este novo?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val idDia = uiState.divisaoSelecionada?.cdFichaDia
+                        if (idDia != null) {
+                            viewModel.iniciarTreino(idDia, ignorarConflito = true)
+                        }
+                        sessaoConflito = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TealLight)
+                ) {
+                    Text("Finalizar e Iniciar", color = TextPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { sessaoConflito = null }) {
+                    Text("Cancelar", color = TextSecondary)
+                }
+            },
+            containerColor = CardBackground,
+            titleContentColor = TextPrimary,
+            textContentColor = TextSecondary
+        )
     }
 
     Box(

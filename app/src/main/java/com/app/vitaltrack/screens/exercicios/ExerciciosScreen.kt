@@ -77,7 +77,7 @@ fun ExerciciosScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = "Academia / Musculação",
+                            text = "Musculação",
                             color = TextPrimary,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold

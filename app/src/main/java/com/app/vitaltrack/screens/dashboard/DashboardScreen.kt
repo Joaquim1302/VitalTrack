@@ -105,7 +105,7 @@ fun DashboardScreen(
                         goal = uiState.calorieGoal
                     )
                 }
-
+                /*
                 item {
                     Card(
                         modifier = Modifier
@@ -130,12 +130,13 @@ fun DashboardScreen(
                             }
                             Spacer(Modifier.width(16.dp))
                             Column {
-                                Text("Treino de Academia", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Treino de Musculação", color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                                 Text("Acesse sua ficha digital", color = TextSecondary, fontSize = 12.sp)
                             }
                         }
                     }
                 }
+                */
 
                 item {
                     Text(

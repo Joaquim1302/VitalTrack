@@ -33,7 +33,7 @@ fun TreinoIniciarButton(
             onClick = {
                 if (cdFichaDia != null) {
                     onIniciarTreino(cdFichaDia)
-                    Toast.makeText(context, "Execução do treino será implementada na próxima fase.", Toast.LENGTH_SHORT).show()
+                    //Toast.makeText(context, "Execução do treino será implementada na próxima fase.", Toast.LENGTH_SHORT).show()
                 }
             },
             enabled = cdFichaDia != null,

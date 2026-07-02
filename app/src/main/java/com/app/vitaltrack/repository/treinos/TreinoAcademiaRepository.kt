@@ -36,7 +36,8 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
             return if (emAndamento.cdFichaDia == cdFichaDia) {
                 TreinoSessaoResult.SessaoRetomada(emAndamento)
             } else {
-                TreinoSessaoResult.SessaoEmAndamentoDeOutroTreino(emAndamento)
+                // Em vez de erro, retornamos um estado de conflito
+                TreinoSessaoResult.SessaoConflito(emAndamento)
             }
         }
 
@@ -50,6 +51,17 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
 
         val id = dao.inserirSessao(novaSessao)
         return TreinoSessaoResult.SessaoCriada(novaSessao.copy(cdTreinoSessao = id))
+    }
+
+    /**
+     * Finaliza qualquer sessão em aberto e inicia uma nova.
+     */
+    suspend fun forcarNovaSessao(cdCliente: Long, cdFichaDia: Long): TreinoSessaoResult {
+        val emAndamento = dao.buscarSessaoEmAndamento(cdCliente)
+        if (emAndamento != null) {
+            concluirSessaoTreino(emAndamento.cdTreinoSessao)
+        }
+        return iniciarSessaoTreino(cdCliente, cdFichaDia)
     }
 
     suspend fun buscarSessaoEmAndamento(cdCliente: Long): TreinoSessaoEntity? = 

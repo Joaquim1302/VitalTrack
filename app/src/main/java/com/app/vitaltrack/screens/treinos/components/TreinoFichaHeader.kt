@@ -53,7 +53,7 @@ fun TreinoFichaHeader(
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = "Treino de Academia",
+                    text = "Treino de Musculação",
                     color = TextPrimary,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold

@@ -17,6 +17,10 @@ import androidx.compose.ui.unit.sp
 import com.app.vitaltrack.data.entity.treinos.TreinoFichaExercicioEntity
 import com.app.vitaltrack.ui.theme.*
 
+/**
+ * Componente de Card para exibição de um exercício dentro de uma ficha de treino.
+ * Exibe informações como ordem, nome, séries, repetições, carga e tempo de descanso.
+ */
 @Composable
 fun TreinoExercicioCard(
     exercicio: TreinoFichaExercicioEntity
@@ -30,26 +34,43 @@ fun TreinoExercicioCard(
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(TealDark.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
+            // Coluna lateral com Indicador de Ordem e Ícone decorativo
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "${exercicio.nrOrdem}",
-                    color = TealLight,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 18.sp
+                // Indicador numérico da ordem do exercício (ex: 1, 2, 3...)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(TealDark.copy(alpha = 0.2f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "${exercicio.nrOrdem}",
+                        color = TealLight,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp
+                    )
+                }
+
+                // Ícone decorativo de halteres (posicionado abaixo da ordem)
+                Icon(
+                    imageVector = Icons.Default.FitnessCenter,
+                    contentDescription = null,
+                    tint = TealLight.copy(alpha = 0.5f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
             
             Spacer(modifier = Modifier.width(16.dp))
             
+            // Informações detalhadas do exercício (agora com mais espaço lateral)
             Column(modifier = Modifier.weight(1f)) {
+                // Nome do Exercício (obtido temporariamente de dsObs)
                 Text(
                     text = exercicio.dsObs ?: "Exercício", // Atualmente usando dsObs para o nome, TODO vincular com tabela exercícios
                     color = TextPrimary,
@@ -59,12 +80,14 @@ fun TreinoExercicioCard(
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
+                // Formatação do texto de repetições (suporta números ou textos como "ao máx")
                 val repsText = if (exercicio.nrRepeticoesPlanejadas > 0) {
                     "${exercicio.nrRepeticoesPlanejadas} repetições"
                 } else {
                     exercicio.dsObs ?: "repetições"
                 }
 
+                // Exibição do volume: Séries x Repetições
                 Text(
                     text = "${exercicio.nrSeriesPlanejadas} séries x $repsText",
                     color = TextPrimary,
@@ -72,9 +95,10 @@ fun TreinoExercicioCard(
                     fontWeight = FontWeight.Medium
                 )
                 
+                // Exibição da Carga Recomendada
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Carga sugerida: ",
+                        text = "Carga: ",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -86,6 +110,7 @@ fun TreinoExercicioCard(
                     )
                 }
 
+                // Exibição do Tempo de Descanso
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Descanso: ",
@@ -99,17 +124,7 @@ fun TreinoExercicioCard(
                         fontWeight = FontWeight.Bold
                     )
                 }
-                
-                // Futuramente, se houver observação específica (além do nome temporário)
-                // exercicio.dsObsReal?.let { ... }
             }
-            
-            Icon(
-                imageVector = Icons.Default.FitnessCenter,
-                contentDescription = null,
-                tint = TealLight.copy(alpha = 0.5f),
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }

@@ -12,24 +12,35 @@ class MarkdownTreinoParser {
         val treinos = mutableListOf<TreinoDiaMarkdownImportado>()
         val lines = content.lines()
 
+        var dsFicha = "Plano de Treino Importado"
         var currentTreinoNome = ""
         var currentGrupoMuscular: String? = null
         var currentExercicios = mutableListOf<TreinoExercicioMarkdownImportado>()
         var foundTitle = false
+        var firstH1Found = false
 
         var i = 0
         while (i < lines.size) {
             val line = lines[i].trim()
 
-            if (line.startsWith("#")) {
+            // Identifica o título principal (H1: # Título)
+            if (!firstH1Found && line.startsWith("#") && !line.startsWith("##")) {
+                dsFicha = line.removePrefix("#").trim()
+                firstH1Found = true
+                i++
+                continue
+            }
+
+            // Identifica os treinos individuais (H2: ## Treino)
+            if (line.startsWith("##") || (line.startsWith("#") && firstH1Found)) {
                 // Se já tínhamos um treino sendo processado, salva ele
                 if (foundTitle && currentExercicios.isNotEmpty()) {
                     treinos.add(TreinoDiaMarkdownImportado(currentTreinoNome, currentGrupoMuscular, currentExercicios.toList()))
                     currentExercicios = mutableListOf()
                 }
 
-                // Processa novo título
-                val titleContent = line.removePrefix("#").trim().removePrefix("#").trim() // Suporta # ou ##
+                // Processa novo título do treino
+                val titleContent = line.removePrefix("##").removePrefix("#").trim()
                 if (titleContent.contains("—")) {
                     val parts = titleContent.split("—", limit = 2)
                     currentTreinoNome = parts[0].trim()
@@ -100,7 +111,7 @@ class MarkdownTreinoParser {
             MarkdownTreinoParseResult.Error(DEFAULT_ERROR_MESSAGE)
         } else {
             val fichaImportada = TreinoMarkdownImportado(
-                dsFicha = "Plano de Treino Importado",
+                dsFicha = dsFicha,
                 dias = treinos
             )
             MarkdownTreinoParseResult.Success(fichaImportada)
