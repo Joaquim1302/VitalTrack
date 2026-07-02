@@ -1,7 +1,6 @@
 package com.app.vitaltrack.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.core.net.toUri
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,7 +16,6 @@ import com.app.vitaltrack.screens.refeicoes.RefeicaoCadastroScreen
 import com.app.vitaltrack.screens.transferencia.TransferirDadosScreen
 import com.app.vitaltrack.screens.treinos.TreinoAcademiaScreen
 import com.app.vitaltrack.screens.treinos.TreinoExecucaoScreen
-import com.app.vitaltrack.screens.treinos.TreinoMarkdownImportScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -74,26 +72,6 @@ fun NavGraph(navController: NavHostController) {
                 onBackClick = { onBack() },
                 onNavigateToExecution = { cdSessao ->
                     navController.navigate(Screen.WorkoutExecution.createRoute(cdSessao))
-                },
-                onNavigateToMarkdown = { uri ->
-                    navController.navigate(Screen.TreinoMarkdownImport.createRoute(uri?.toString()))
-                }
-            )
-        }
-        composable(
-            route = Screen.TreinoMarkdownImport.route,
-            arguments = listOf(navArgument("uri") { 
-                type = NavType.StringType
-                nullable = true
-                defaultValue = null
-            })
-        ) { backStackEntry ->
-            val uriString = backStackEntry.arguments?.getString("uri")
-            TreinoMarkdownImportScreen(
-                uri = uriString?.toUri(),
-                onBackClick = { onBack() },
-                onImportSuccess = { 
-                    onBack() 
                 }
             )
         }
