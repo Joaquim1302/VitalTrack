@@ -1,6 +1,7 @@
 package com.app.vitaltrack.screens.treinos
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +22,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.os.Vibrator
+import android.os.VibrationEffect
+import android.media.AudioManager
+import android.media.ToneGenerator
+import androidx.core.content.ContextCompat
 import com.app.vitaltrack.screens.treinos.components.ExerciseExecutionCard
 import com.app.vitaltrack.ui.theme.*
 
@@ -41,6 +47,26 @@ fun TreinoExecucaoScreen(
     LaunchedEffect(uiState.treinoConcluido) {
         if (uiState.treinoConcluido) {
             onFinish()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is TreinoExecucaoEvent.DescansoConcluido -> {
+                    // Vibração curta e discreta
+                    val vibrator = ContextCompat.getSystemService(context, Vibrator::class.java)
+                    vibrator?.vibrate(VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE))
+
+                    // Som simples (Beep curto)
+                    try {
+                        val tg = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
+                        tg.startTone(ToneGenerator.TONE_PROP_BEEP)
+                    } catch (e: Exception) {
+                        // Silencioso se der erro ou permissão
+                    }
+                }
+            }
         }
     }
 
@@ -125,6 +151,40 @@ fun TreinoExecucaoScreen(
                 Icon(Icons.Default.Done, contentDescription = null, tint = TextPrimary)
                 Spacer(Modifier.width(8.dp))
                 Text("Concluir Treino", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            }
+        }
+
+        // Overlay do Cronômetro de Descanso
+        if (uiState.isRestTimerVisible) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .clickable { viewModel.hideRestTimer() }, // Permite fechar ao tocar fora se o timer acabou
+                contentAlignment = Alignment.Center
+            ) {
+                com.app.vitaltrack.screens.treinos.components.RestTimerComponent(
+                    remainingSeconds = uiState.restRemainingSeconds,
+                    isRunning = uiState.isRestTimerRunning,
+                    onSkip = { viewModel.skipRestTimer() },
+                    onAddThirtySeconds = { viewModel.addThirtySecondsToRestTimer() }
+                )
+
+                if (uiState.restFinished) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 200.dp)
+                            .background(TealLight, RoundedCornerShape(20.dp))
+                            .padding(horizontal = 24.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = "Descanso Concluído! Próxima série.",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }

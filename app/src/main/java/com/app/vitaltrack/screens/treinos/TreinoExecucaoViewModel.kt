@@ -9,11 +9,16 @@ import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
 import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+
+sealed class TreinoExecucaoEvent {
+    object DescansoConcluido : TreinoExecucaoEvent()
+}
 
 class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: TreinoAcademiaRepository
@@ -22,8 +27,12 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
     private val _uiState = MutableStateFlow(TreinoExecucaoUiState())
     val uiState: StateFlow<TreinoExecucaoUiState> = _uiState.asStateFlow()
 
+    private val _events = Channel<TreinoExecucaoEvent>()
+    val events = _events.receiveAsFlow()
+
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     private var timerJob: Job? = null
+    private var restTimerJob: Job? = null
 
     init {
         val db = AppDatabase.getDatabase(application)
@@ -200,7 +209,70 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
                     seriesConcluidas = novosExercicios.sumOf { it.series.count { s -> s.concluida } }
                 )
             }
+
+            // Iniciar cronômetro de descanso (Fase 5)
+            val restSeconds = exercicioExec.exercicio.nrDescansoSegundos ?: 60
+            startRestTimer(
+                seconds = restSeconds,
+                exerciseName = exercicioExec.exercicio.dsObs ?: "Exercício",
+                serieNumber = nrSerie
+            )
         }
+    }
+
+    private fun startRestTimer(seconds: Int, exerciseName: String?, serieNumber: Int?) {
+        restTimerJob?.cancel()
+        _uiState.update { it.copy(
+            isRestTimerVisible = true,
+            isRestTimerRunning = true,
+            restRemainingSeconds = seconds,
+            restTotalSeconds = seconds,
+            currentRestExerciseName = exerciseName,
+            currentRestSerieNumber = serieNumber,
+            restFinished = false
+        ) }
+
+        restTimerJob = viewModelScope.launch {
+            while (_uiState.value.restRemainingSeconds > 0) {
+                delay(1000)
+                _uiState.update { it.copy(
+                    restRemainingSeconds = (it.restRemainingSeconds - 1).coerceAtZero()
+                ) }
+            }
+            finishRestTimer()
+        }
+    }
+
+    private fun Int.coerceAtZero() = if (this < 0) 0 else this
+
+    fun skipRestTimer() {
+        restTimerJob?.cancel()
+        _uiState.update { it.copy(
+            isRestTimerVisible = false,
+            isRestTimerRunning = false,
+            restRemainingSeconds = 0
+        ) }
+    }
+
+    fun addThirtySecondsToRestTimer() {
+        _uiState.update { it.copy(
+            restRemainingSeconds = it.restRemainingSeconds + 30
+        ) }
+    }
+
+    private fun finishRestTimer() {
+        _uiState.update { it.copy(
+            isRestTimerRunning = false,
+            restRemainingSeconds = 0,
+            restFinished = true
+        ) }
+        viewModelScope.launch {
+            _events.send(TreinoExecucaoEvent.DescansoConcluido)
+        }
+    }
+
+    fun hideRestTimer() {
+        _uiState.update { it.copy(isRestTimerVisible = false, restFinished = false) }
     }
 
     private fun setSaving(cdFichaExercicio: Long, nrSerie: Int, saving: Boolean) {

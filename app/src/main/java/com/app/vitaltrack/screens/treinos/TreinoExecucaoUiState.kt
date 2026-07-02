@@ -31,7 +31,15 @@ data class TreinoExecucaoUiState(
     val showConcluirDialog: Boolean = false,
     val showCancelarDialog: Boolean = false,
     val totalSeries: Int = 0,
-    val seriesConcluidas: Int = 0
+    val seriesConcluidas: Int = 0,
+    // Cronômetro de Descanso
+    val isRestTimerVisible: Boolean = false,
+    val isRestTimerRunning: Boolean = false,
+    val restRemainingSeconds: Int = 0,
+    val restTotalSeconds: Int = 0,
+    val currentRestExerciseName: String? = null,
+    val currentRestSerieNumber: Int? = null,
+    val restFinished: Boolean = false
 ) {
     val progresso: Float get() = if (totalSeries > 0) seriesConcluidas.toFloat() / totalSeries else 0f
 }
