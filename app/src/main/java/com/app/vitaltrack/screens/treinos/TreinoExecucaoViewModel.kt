@@ -206,7 +206,7 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
                         val novasSeries = ex.series.map { s ->
                             when {
                                 s.nrSerie == nrSerie -> s.copy(cdSerie = novoId, concluida = true, isSaving = false)
-                                s.nrSerie == nrSerie + 1 && !s.concluida && s.carga.isEmpty() -> s.copy(carga = serieUi.carga)
+                                s.nrSerie > nrSerie && !s.concluida -> s.copy(carga = serieUi.carga)
                                 else -> s
                             }
                         }
