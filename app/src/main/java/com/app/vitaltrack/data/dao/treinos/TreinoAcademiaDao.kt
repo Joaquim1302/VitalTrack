@@ -49,6 +49,9 @@ interface TreinoAcademiaDao {
     @Query("SELECT * FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_EXERCICIO = :cdFichaExercicio")
     suspend fun buscarExercicioPlanejado(cdFichaExercicio: Long): TreinoFichaExercicioEntity?
 
+    @Update
+    suspend fun atualizarExercicioPlanejado(exercicio: TreinoFichaExercicioEntity)
+
     // Sessões
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun inserirSessao(sessao: TreinoSessaoEntity): Long
@@ -103,6 +106,19 @@ interface TreinoAcademiaDao {
 
     @Query("SELECT * FROM tb_DT_treinos_series WHERE CD_TREINO_SESSAO = :cdTreinoSessao AND CD_FICHA_EXERCICIO = :cdFichaExercicio ORDER BY NR_SERIE")
     fun listarSeriesPorExercicio(cdTreinoSessao: Long, cdFichaExercicio: Long): Flow<List<TreinoSerieEntity>>
+
+    @Query("""
+        SELECT s1.* 
+        FROM tb_DT_treinos_series s1
+        JOIN (
+            SELECT CD_FICHA_EXERCICIO, MAX(NR_SERIE) as max_serie
+            FROM tb_DT_treinos_series
+            WHERE CD_TREINO_SESSAO = :cdSessao
+            GROUP BY CD_FICHA_EXERCICIO
+        ) s2 ON s1.CD_FICHA_EXERCICIO = s2.CD_FICHA_EXERCICIO AND s1.NR_SERIE = s2.max_serie
+        WHERE s1.CD_TREINO_SESSAO = :cdSessao
+    """)
+    suspend fun buscarUltimasSeriesDaSessao(cdSessao: Long): List<TreinoSerieEntity>
 
     // Importações
     @Insert(onConflict = OnConflictStrategy.REPLACE)

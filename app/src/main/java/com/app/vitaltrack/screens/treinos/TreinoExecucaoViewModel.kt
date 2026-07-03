@@ -341,6 +341,9 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
             
             val result = repository.concluirSessaoTreino(cdSessao)
             if (result != null) {
+                // Atualiza a ficha ativa com os valores da última série de cada exercício
+                repository.atualizarFichaComBaseNaExecucao(cdSessao)
+
                 timerJob?.cancel()
                 _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }
             } else {

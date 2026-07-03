@@ -73,6 +73,22 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
     suspend fun buscarUltimaSessaoConcluida(cdCliente: Long, cdFichaDia: Long, cdSessaoAtual: Long): TreinoSessaoEntity? =
         dao.buscarUltimaSessaoConcluidaDoMesmoTreino(cdCliente, cdFichaDia, cdSessaoAtual)
 
+    suspend fun atualizarFichaComBaseNaExecucao(cdSessao: Long) {
+        val ultimasSeries = dao.buscarUltimasSeriesDaSessao(cdSessao)
+        
+        ultimasSeries.forEach { serieRealizada ->
+            val planejado = dao.buscarExercicioPlanejado(serieRealizada.cdFichaExercicio)
+            if (planejado != null) {
+                // Atualiza o planejamento com a carga e reps da última série feita
+                val atualizado = planejado.copy(
+                    nmCargaRecomendada = serieRealizada.nmCarga,
+                    nrRepeticoesPlanejadas = serieRealizada.nrRepeticoes ?: planejado.nrRepeticoesPlanejadas
+                )
+                dao.atualizarExercicioPlanejado(atualizado)
+            }
+        }
+    }
+
     suspend fun concluirSessaoTreino(cdSessao: Long): TreinoSessaoEntity? {
         val sessao = dao.buscarSessaoPorId(cdSessao) ?: return null
         
