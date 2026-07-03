@@ -69,10 +69,19 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
                 val seriesParaExercicio = seriesReais.filter { it.cdFichaExercicio == planejado.cdFichaExercicio }
                 val seriesUi = (1..planejado.nrSeriesPlanejadas).map { index ->
                     val real = seriesParaExercicio.find { it.nrSerie == index }
+                    
+                    // Preenche com a carga realizada ou, se for nova série, com a carga recomendada
+                    val cargaValor = real?.nmCarga 
+                        ?: planejado.nmCargaRecomendada
+                    
+                    val cargaStr = cargaValor?.let { 
+                        if ((it % 1f) == 0f) it.toInt().toString() else it.toString() 
+                    } ?: ""
+
                     TreinoSerieUiModel(
                         cdSerie = real?.cdSerie ?: 0L,
                         nrSerie = index,
-                        carga = real?.nmCarga?.let { if ((it % 1f) == 0f) it.toInt().toString() else it.toString() } ?: "",
+                        carga = cargaStr,
                         repeticoes = real?.nrRepeticoes?.toString() ?: planejado.nrRepeticoesPlanejadas.toString(),
                         concluida = real?.stConcluida ?: false,
                     )

@@ -24,6 +24,7 @@ import com.app.vitaltrack.ui.theme.TextSecondary
 @Composable
 fun SerieExecutionRow(
     serie: TreinoSerieUiModel,
+    recomendacaoCarga: String? = null,
     onCargaChange: (String) -> Unit,
     onRepsChange: (String) -> Unit,
     onAdjustCarga: (Float) -> Unit,
@@ -65,6 +66,7 @@ fun SerieExecutionRow(
                 onValueChange = onCargaChange,
                 modifier = Modifier.width(80.dp),
                 label = { Text("Carga", fontSize = 10.sp) },
+                placeholder = { recomendacaoCarga?.let { Text(it, fontSize = 10.sp) } },
                 suffix = { Text("kg", fontSize = 10.sp) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,

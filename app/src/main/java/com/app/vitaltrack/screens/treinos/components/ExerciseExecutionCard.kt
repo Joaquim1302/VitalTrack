@@ -56,8 +56,11 @@ fun ExerciseExecutionCard(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    
+                    val cargaPlanejada = execucao.exercicio.nmCargaRecomendada?.let { " • Carga: ${it.toInt()}kg" } ?: ""
+                    
                     Text(
-                        text = "Planejado: ${execucao.exercicio.nrSeriesPlanejadas} x $repsText • Descanso: ${execucao.exercicio.nrDescansoSegundos ?: "padrão"}s",
+                        text = "Planejado: ${execucao.exercicio.nrSeriesPlanejadas} x $repsText$cargaPlanejada • Descanso: ${execucao.exercicio.nrDescansoSegundos ?: "padrão"}s",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -69,6 +72,7 @@ fun ExerciseExecutionCard(
             execucao.series.forEach { serie ->
                 SerieExecutionRow(
                     serie = serie,
+                    recomendacaoCarga = execucao.exercicio.nmCargaRecomendada?.toInt()?.toString(),
                     onCargaChange = { onCargaChange(serie.nrSerie, it) },
                     onRepsChange = { onRepsChange(serie.nrSerie, it) },
                     onAdjustCarga = { onAdjustCarga(serie.nrSerie, it) },

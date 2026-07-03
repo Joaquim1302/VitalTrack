@@ -157,6 +157,7 @@ fun TreinoAcademiaScreen(
                             TreinoExercicioCard(exercicio)
                         }
 
+                        /*
                         item {
                             TreinoImportFichaCard(onImportMarkdown = {
                                 filePickerLauncher.launch(
@@ -169,6 +170,7 @@ fun TreinoAcademiaScreen(
                                 )
                             })
                         }
+                        */
                     }
                 }
             }
