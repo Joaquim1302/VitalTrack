@@ -17,6 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.app.vitaltrack.screens.treinos.components.*
 import com.app.vitaltrack.ui.theme.*
+import com.app.vitaltrack.ui.widgets.TreinoActionsBottomNavigation
 
 @Composable
 fun TreinoAcademiaScreen(
@@ -103,6 +104,27 @@ fun TreinoAcademiaScreen(
                     ficha = uiState.fichaAtiva,
                     onBackClick = onBackClick
                 )
+            },
+            bottomBar = {
+                TreinoActionsBottomNavigation(
+                    onIniciar = {
+                        uiState.divisaoSelecionada?.cdFichaDia?.let { viewModel.iniciarTreino(it) }
+                    },
+                    onImportar = {
+                        filePickerLauncher.launch(
+                            arrayOf(
+                                "text/markdown",
+                                "text/x-markdown",
+                                "text/plain",
+                                "application/octet-stream"
+                            )
+                        )
+                    },
+                    iniciarEnabled = !uiState.isFichaVazia && uiState.divisaoSelecionada != null && !uiState.isLoading,
+                    importarEnabled = !uiState.isLoading,
+                    cancelarEnabled = false,
+                    concluirEnabled = false
+                )
             }
         ) { innerPadding ->
             if (uiState.isLoading && uiState.divisoes.isEmpty()) {
@@ -129,7 +151,7 @@ fun TreinoAcademiaScreen(
                             .fillMaxSize()
                             .padding(horizontal = 20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
                     ) {
                         items(uiState.exercicios) { exercicio ->
                             TreinoExercicioCard(exercicio)
@@ -150,15 +172,6 @@ fun TreinoAcademiaScreen(
                     }
                 }
             }
-        }
-
-        if (!uiState.isFichaVazia && uiState.divisaoSelecionada != null) {
-            TreinoIniciarButton(
-                cdFichaDia = uiState.divisaoSelecionada?.cdFichaDia,
-                onIniciarTreino = { cdFichaDia -> 
-                    viewModel.iniciarTreino(cdFichaDia)
-                }
-            )
         }
     }
 }

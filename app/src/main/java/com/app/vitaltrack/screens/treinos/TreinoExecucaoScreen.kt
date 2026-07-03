@@ -29,6 +29,7 @@ import android.media.ToneGenerator
 import androidx.core.content.ContextCompat
 import com.app.vitaltrack.screens.treinos.components.ExerciseExecutionCard
 import com.app.vitaltrack.ui.theme.*
+import com.app.vitaltrack.ui.widgets.TreinoActionsBottomNavigation
 
 @Composable
 fun TreinoExecucaoScreen(
@@ -90,6 +91,16 @@ fun TreinoExecucaoScreen(
                         onBack() 
                     }
                 )
+            },
+            bottomBar = {
+                TreinoActionsBottomNavigation(
+                    onCancelar = { viewModel.onCancelarClick() },
+                    onConcluir = { viewModel.onConcluirClick() },
+                    iniciarEnabled = false,
+                    importarEnabled = false,
+                    cancelarEnabled = !uiState.isLoading,
+                    concluirEnabled = !uiState.isLoading
+                )
             }
         ) { innerPadding ->
             if (uiState.isLoading && uiState.sessao == null) {
@@ -115,7 +126,7 @@ fun TreinoExecucaoScreen(
                             .weight(1f)
                             .padding(horizontal = 20.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
+                        contentPadding = PaddingValues(top = 16.dp, bottom = 32.dp)
                     ) {
                         items(uiState.exerciciosExecucao) { ex ->
                             ExerciseExecutionCard(
@@ -128,39 +139,6 @@ fun TreinoExecucaoScreen(
                             )
                         }
                     }
-                }
-            }
-        }
-
-        // Botões de ação fixos no rodapé
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 20.dp, end = 20.dp, bottom = 55.dp, top = 20.dp),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                TextButton(
-                    onClick = { viewModel.onCancelarClick() },
-                    enabled = !uiState.isLoading
-                ) {
-                    Text("Cancelar Treino", color = Color.Red.copy(alpha = 0.7f), fontSize = 14.sp)
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Button(
-                    onClick = { viewModel.onConcluirClick() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = TealLight),
-                    shape = RoundedCornerShape(16.dp),
-                    enabled = !uiState.isLoading
-                ) {
-                    Icon(Icons.Default.Done, contentDescription = null, tint = TextPrimary)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Concluir Treino", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
         }
