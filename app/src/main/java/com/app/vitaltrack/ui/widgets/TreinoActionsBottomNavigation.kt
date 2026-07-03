@@ -71,8 +71,8 @@ fun TreinoActionsBottomNavigation(
             enabled = cancelarEnabled,
             onClick = onCancelar,
             colors = NavigationBarItemDefaults.colors(
-                unselectedIconColor = Color.Red.copy(alpha = 0.7f),
-                unselectedTextColor = Color.Red.copy(alpha = 0.7f),
+                unselectedIconColor = TealLight,
+                unselectedTextColor = TealLight,
                 disabledIconColor = Color.White.copy(alpha = 0.2f),
                 disabledTextColor = Color.White.copy(alpha = 0.2f),
                 indicatorColor = Color.Transparent

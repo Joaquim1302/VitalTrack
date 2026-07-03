@@ -206,7 +206,7 @@ fun TreinoExecucaoScreen(
             text = { Text("Deseja cancelar este treino? O treino ficará registrado como CANCELADO.") },
             confirmButton = {
                 TextButton(onClick = { viewModel.confirmarCancelamento() }) {
-                    Text("Cancelar Treino", color = Color.Red)
+                    Text("Cancelar Treino", color = TealLight)
                 }
             },
             dismissButton = {
