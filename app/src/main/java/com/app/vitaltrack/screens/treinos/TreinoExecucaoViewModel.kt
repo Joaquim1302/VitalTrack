@@ -63,27 +63,50 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
         if (sessao != null) {
             val dia = repository.dao.buscarDia(sessao.cdFichaDia)
             val exerciciosPlanejados = repository.dao.listarExerciciosPlanejadosSync(sessao.cdFichaDia)
-            val seriesReais = repository.buscarSeriesDaSessao(cdSessao)
+            val seriesReaisSessaoAtual = repository.buscarSeriesDaSessao(cdSessao)
+
+            // Busca histórico da última sessão concluída
+            val ultimaSessaoConcluida = repository.buscarUltimaSessaoConcluida(
+                sessao.cdCliente, 
+                sessao.cdFichaDia, 
+                sessao.cdTreinoSessao
+            )
+            val seriesHistorico = ultimaSessaoConcluida?.let { 
+                repository.buscarSeriesDaSessao(it.cdTreinoSessao) 
+            } ?: emptyList()
 
             val exerciciosExecucao: List<TreinoExercicioExecucao> = exerciciosPlanejados.map { planejado ->
-                val seriesParaExercicio = seriesReais.filter { it.cdFichaExercicio == planejado.cdFichaExercicio }
+                val seriesParaExercicioAtual = seriesReaisSessaoAtual.filter { it.cdFichaExercicio == planejado.cdFichaExercicio }
+                val seriesParaExercicioHistorico = seriesHistorico.filter { it.cdFichaExercicio == planejado.cdFichaExercicio }
+
                 val seriesUi = (1..planejado.nrSeriesPlanejadas).map { index ->
-                    val real = seriesParaExercicio.find { it.nrSerie == index }
+                    val realAtual = seriesParaExercicioAtual.find { it.nrSerie == index }
+                    val realHistorico = seriesParaExercicioHistorico.find { it.nrSerie == index }
                     
-                    // Preenche com a carga realizada ou, se for nova série, com a carga recomendada
-                    val cargaValor = real?.nmCarga 
+                    // Prioridade de sugestão/valor:
+                    // 1. Valor já salvo na sessão atual (retomada)
+                    // 2. Valor realizado na última sessão concluída
+                    // 3. Valor planejado na ficha (fallback)
+                    
+                    val cargaValor = realAtual?.nmCarga 
+                        ?: realHistorico?.nmCarga
                         ?: planejado.nmCargaRecomendada
                     
                     val cargaStr = cargaValor?.let { 
                         if ((it % 1f) == 0f) it.toInt().toString() else it.toString() 
                     } ?: ""
 
+                    val repsValor = realAtual?.nrRepeticoes 
+                        ?: realHistorico?.nrRepeticoes 
+                        ?: planejado.nrRepeticoesPlanejadas
+
                     TreinoSerieUiModel(
-                        cdSerie = real?.cdSerie ?: 0L,
+                        cdSerie = realAtual?.cdSerie ?: 0L,
                         nrSerie = index,
                         carga = cargaStr,
-                        repeticoes = real?.nrRepeticoes?.toString() ?: planejado.nrRepeticoesPlanejadas.toString(),
-                        concluida = real?.stConcluida ?: false,
+                        repeticoes = repsValor?.toString() ?: "",
+                        concluida = realAtual?.stConcluida ?: false,
+                        sugeridoDoTreinoAnterior = realAtual == null && realHistorico != null
                     )
                 }
                 TreinoExercicioExecucao(planejado, seriesUi)

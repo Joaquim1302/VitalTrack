@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -91,6 +92,15 @@ fun SerieExecutionRow(
                     unfocusedBorderColor = CardBorder
                 )
             )
+
+            if (serie.sugeridoDoTreinoAnterior && !serie.concluida) {
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = "Valores vindos do treino anterior",
+                    modifier = Modifier.size(16.dp),
+                    tint = TealLight.copy(alpha = 0.6f)
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 

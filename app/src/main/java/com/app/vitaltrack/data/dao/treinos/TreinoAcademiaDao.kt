@@ -65,6 +65,23 @@ interface TreinoAcademiaDao {
     @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_TREINO_SESSAO = :cdSessao")
     suspend fun buscarSessaoPorId(cdSessao: Long): TreinoSessaoEntity?
 
+    @Query("""
+        SELECT * 
+        FROM tb_DT_treinos_sessoes 
+        WHERE CD_CLIENTE = :cdCliente 
+          AND CD_FICHA_DIA = :cdFichaDia 
+          AND ST_STATUS = 'CONCLUIDO' 
+          AND CD_TREINO_SESSAO != :cdSessaoAtual
+        ORDER BY 
+          CASE WHEN DT_FIM IS NULL THEN DT_INICIO ELSE DT_FIM END DESC 
+        LIMIT 1
+    """)
+    suspend fun buscarUltimaSessaoConcluidaDoMesmoTreino(
+        cdCliente: Long,
+        cdFichaDia: Long,
+        cdSessaoAtual: Long
+    ): TreinoSessaoEntity?
+
     @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_CLIENTE = :cdCliente ORDER BY DT_INICIO DESC")
     fun listarSessoes(cdCliente: Long): Flow<List<TreinoSessaoEntity>>
 

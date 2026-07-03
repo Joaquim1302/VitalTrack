@@ -70,6 +70,9 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
     suspend fun buscarSessaoEmAndamento(cdCliente: Long, cdFichaDia: Long): TreinoSessaoEntity? = 
         dao.buscarSessaoEmAndamentoPorDia(cdCliente, cdFichaDia)
 
+    suspend fun buscarUltimaSessaoConcluida(cdCliente: Long, cdFichaDia: Long, cdSessaoAtual: Long): TreinoSessaoEntity? =
+        dao.buscarUltimaSessaoConcluidaDoMesmoTreino(cdCliente, cdFichaDia, cdSessaoAtual)
+
     suspend fun concluirSessaoTreino(cdSessao: Long): TreinoSessaoEntity? {
         val sessao = dao.buscarSessaoPorId(cdSessao) ?: return null
         

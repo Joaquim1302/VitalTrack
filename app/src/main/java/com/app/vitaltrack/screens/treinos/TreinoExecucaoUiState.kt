@@ -10,7 +10,8 @@ data class TreinoSerieUiModel(
     val carga: String = "",
     val repeticoes: String = "",
     val concluida: Boolean = false,
-    val isSaving: Boolean = false
+    val isSaving: Boolean = false,
+    val sugeridoDoTreinoAnterior: Boolean = false
 )
 
 data class TreinoExercicioExecucao(
