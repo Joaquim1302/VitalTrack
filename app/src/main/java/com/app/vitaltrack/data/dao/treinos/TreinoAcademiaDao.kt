@@ -17,6 +17,9 @@ interface TreinoAcademiaDao {
     @Query("SELECT * FROM tb_DT_treinos_fichas WHERE CD_CLIENTE = :cdCliente AND ST_ATIVA = 1 LIMIT 1")
     fun buscarFichaAtiva(cdCliente: Long): Flow<TreinoFichaEntity?>
 
+    @Query("SELECT * FROM tb_DT_treinos_fichas WHERE CD_CLIENTE = :cdCliente AND ST_ATIVA = 1 LIMIT 1")
+    suspend fun buscarFichaAtivaSync(cdCliente: Long): TreinoFichaEntity?
+
     @Query("SELECT * FROM tb_DT_treinos_fichas WHERE CD_CLIENTE = :cdCliente ORDER BY DT_INICIO DESC")
     fun listarFichas(cdCliente: Long): Flow<List<TreinoFichaEntity>>
 
@@ -32,6 +35,9 @@ interface TreinoAcademiaDao {
 
     @Query("SELECT * FROM tb_DT_treinos_fichas_dias WHERE CD_FICHA = :cdFicha ORDER BY NR_ORDEM")
     fun listarDias(cdFicha: Long): Flow<List<TreinoFichaDiaEntity>>
+
+    @Query("SELECT * FROM tb_DT_treinos_fichas_dias WHERE CD_FICHA = :cdFicha ORDER BY NR_ORDEM")
+    suspend fun listarDiasSync(cdFicha: Long): List<TreinoFichaDiaEntity>
 
     @Query("SELECT * FROM tb_DT_treinos_fichas_dias WHERE CD_FICHA_DIA = :cdFichaDia")
     suspend fun buscarDia(cdFichaDia: Long): TreinoFichaDiaEntity?
