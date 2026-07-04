@@ -12,6 +12,7 @@ import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
 import com.app.vitaltrack.repository.treinos.TreinoMarkdownRepository
 import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
 import com.app.vitaltrack.data.markdown.MarkdownTreinoParseResult
+import com.app.vitaltrack.data.markdown.TreinoMarkdownExportService
 import android.net.Uri
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -22,6 +23,8 @@ sealed class TreinoAcademiaEvent {
     data class NavegarParaExecucao(val cdSessao: Long) : TreinoAcademiaEvent()
     object NavegarParaImportacaoMarkdown : TreinoAcademiaEvent()
     data class MostrarErro(val mensagem: String) : TreinoAcademiaEvent()
+    data class IniciarExportacaoMarkdown(val defaultFileName: String) : TreinoAcademiaEvent()
+    data class MostrarMensagemSucesso(val mensagem: String) : TreinoAcademiaEvent()
     data class MostrarDialogoConflito(val sessao: com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity) : TreinoAcademiaEvent()
 }
 
@@ -39,6 +42,7 @@ data class TreinoAcademiaUiState(
 class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: TreinoAcademiaRepository
     private val markdownRepository: TreinoMarkdownRepository
+    private val markdownExportService: TreinoMarkdownExportService
     private val userPrefs: UserPreferencesRepository
 
     private val _uiState = MutableStateFlow(TreinoAcademiaUiState())
@@ -47,10 +51,13 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
     private val _events = Channel<TreinoAcademiaEvent>()
     val events = _events.receiveAsFlow()
 
+    private var markdownTemporario: String? = null
+
     init {
         val db = AppDatabase.getDatabase(application)
         repository = TreinoAcademiaRepository(db.treinoAcademiaDao())
         markdownRepository = TreinoMarkdownRepository.getInstance(application)
+        markdownExportService = TreinoMarkdownExportService(repository)
         userPrefs = UserPreferencesRepository(application)
 
         observeClienteAtivo()
@@ -167,6 +174,41 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
                 _events.send(TreinoAcademiaEvent.NavegarParaImportacaoMarkdown)
             } else if (result is MarkdownTreinoParseResult.Error) {
                 _events.send(TreinoAcademiaEvent.MostrarErro(result.message))
+            }
+        }
+    }
+
+    fun prepararExportacaoMarkdown() {
+        val clienteId = _uiState.value.clienteId ?: return
+        val ficha = _uiState.value.fichaAtiva ?: return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val markdown = markdownExportService.gerarMarkdownFichaAtiva(clienteId)
+            _uiState.update { it.copy(isLoading = false) }
+            
+            if (markdown != null) {
+                markdownTemporario = markdown
+                val fileName = "treino_${ficha.dsFicha.lowercase().replace(" ", "_")}.md"
+                _events.send(TreinoAcademiaEvent.IniciarExportacaoMarkdown(fileName))
+            } else {
+                _events.send(TreinoAcademiaEvent.MostrarErro("Não foi possível gerar o arquivo de exportação."))
+            }
+        }
+    }
+
+    fun salvarMarkdownNoUri(uri: Uri) {
+        val content = markdownTemporario ?: return
+        viewModelScope.launch {
+            try {
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { output ->
+                    output.write(content.toByteArray())
+                }
+                _events.send(TreinoAcademiaEvent.MostrarMensagemSucesso("Ficha exportada com sucesso!"))
+            } catch (e: Exception) {
+                _events.send(TreinoAcademiaEvent.MostrarErro("Erro ao salvar arquivo: ${e.message}"))
+            } finally {
+                markdownTemporario = null
             }
         }
     }

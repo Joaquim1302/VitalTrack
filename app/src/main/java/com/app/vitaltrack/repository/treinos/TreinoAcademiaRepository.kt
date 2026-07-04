@@ -10,6 +10,8 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
 
     fun buscarFichaAtiva(cdCliente: Long): Flow<TreinoFichaEntity?> = dao.buscarFichaAtiva(cdCliente)
 
+    suspend fun buscarFichaAtivaSync(cdCliente: Long): TreinoFichaEntity? = dao.buscarFichaAtivaSync(cdCliente)
+
     suspend fun criarFichaDeTreino(ficha: TreinoFichaEntity): Long {
         if (ficha.stAtiva) {
             dao.desativarFichasAnteriores(ficha.cdCliente)
@@ -20,6 +22,8 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
     suspend fun criarDivisaoDaFicha(dia: TreinoFichaDiaEntity): Long = dao.inserirDia(dia)
 
     fun listarDias(cdFicha: Long): Flow<List<TreinoFichaDiaEntity>> = dao.listarDias(cdFicha)
+
+    suspend fun listarDiasSync(cdFicha: Long): List<TreinoFichaDiaEntity> = dao.listarDiasSync(cdFicha)
 
     suspend fun adicionarExercicioPlanejado(exercicio: TreinoFichaExercicioEntity): Long = 
         dao.inserirExercicioPlanejado(exercicio)

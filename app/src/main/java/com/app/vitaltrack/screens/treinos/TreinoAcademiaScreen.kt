@@ -39,6 +39,15 @@ fun TreinoAcademiaScreen(
         }
     )
 
+    val fileSaverLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/markdown"),
+        onResult = { uri ->
+            if (uri != null) {
+                viewModel.salvarMarkdownNoUri(uri)
+            }
+        }
+    )
+
     LaunchedEffect(Unit) {
         viewModel.events.collect { event ->
             when (event) {
@@ -50,6 +59,12 @@ fun TreinoAcademiaScreen(
                 }
                 is TreinoAcademiaEvent.MostrarDialogoConflito -> {
                     sessaoConflito = event.sessao
+                }
+                is TreinoAcademiaEvent.IniciarExportacaoMarkdown -> {
+                    fileSaverLauncher.launch(event.defaultFileName)
+                }
+                is TreinoAcademiaEvent.MostrarMensagemSucesso -> {
+                    android.widget.Toast.makeText(context, event.mensagem, android.widget.Toast.LENGTH_SHORT).show()
                 }
                 is TreinoAcademiaEvent.MostrarErro -> {
                     android.widget.Toast.makeText(context, event.mensagem, android.widget.Toast.LENGTH_LONG).show()
@@ -102,7 +117,8 @@ fun TreinoAcademiaScreen(
             topBar = {
                 TreinoFichaHeader(
                     ficha = uiState.fichaAtiva,
-                    onBackClick = onBackClick
+                    onBackClick = onBackClick,
+                    onExportClick = { viewModel.prepararExportacaoMarkdown() }
                 )
             },
             bottomBar = {
