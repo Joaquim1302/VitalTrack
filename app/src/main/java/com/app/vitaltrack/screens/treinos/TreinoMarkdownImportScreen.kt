@@ -66,7 +66,15 @@ fun TreinoMarkdownImportScreen(
     ) {
         Scaffold(
             containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        containerColor = TealLight,
+                        contentColor = TextPrimary,
+                        snackbarData = data
+                    )
+                }
+            },
             topBar = {
                 ImportHeader(onBackClick = onBackClick, onRefresh = { viewModel.carregarTreinos() })
             }

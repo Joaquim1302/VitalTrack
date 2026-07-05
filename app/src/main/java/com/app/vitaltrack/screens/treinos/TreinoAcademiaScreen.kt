@@ -28,6 +28,8 @@ fun TreinoAcademiaScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
     var sessaoConflito by remember { mutableStateOf<com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -65,7 +67,7 @@ fun TreinoAcademiaScreen(
                 }
                 is TreinoAcademiaEvent.NotificarGamificacao -> {
                     event.result.snackbarMessage?.let { msg ->
-                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                        snackbarHostState.showSnackbar(msg)
                     }
                 }
                 is TreinoAcademiaEvent.MostrarMensagemSucesso -> {
@@ -125,6 +127,15 @@ fun TreinoAcademiaScreen(
                     onBackClick = onBackClick,
                     onExportClick = { viewModel.prepararExportacaoMarkdown() }
                 )
+            },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        containerColor = TealLight,
+                        contentColor = TextPrimary,
+                        snackbarData = data
+                    )
+                }
             },
             bottomBar = {
                 TreinoActionsBottomNavigation(

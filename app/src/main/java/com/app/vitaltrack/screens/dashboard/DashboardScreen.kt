@@ -64,7 +64,15 @@ fun DashboardScreen(
     ) {
         Scaffold(
             containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        containerColor = TealLight,
+                        contentColor = TextPrimary,
+                        snackbarData = data
+                    )
+                }
+            },
             topBar = {
                 DashboardHeader(onProfileClick = onNavigateToProfile)
             },

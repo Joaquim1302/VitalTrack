@@ -97,7 +97,15 @@ fun RefeicaoCadastroScreen(
 
         Scaffold(
             containerColor = Color.Transparent,
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        containerColor = TealLight,
+                        contentColor = TextPrimary,
+                        snackbarData = data
+                    )
+                }
+            },
             topBar = {
                 HeaderSection(
                     title = "${uiState.mealEmoji} ${uiState.mealName}",

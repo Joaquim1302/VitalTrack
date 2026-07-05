@@ -40,6 +40,7 @@ fun TreinoExecucaoScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(cdSessao) {
         viewModel.init(cdSessao)
@@ -69,7 +70,7 @@ fun TreinoExecucaoScreen(
                 }
                 is TreinoExecucaoEvent.NotificarGamificacao -> {
                     event.result.snackbarMessage?.let { msg ->
-                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                        snackbarHostState.showSnackbar(msg)
                     }
                 }
             }
@@ -87,6 +88,15 @@ fun TreinoExecucaoScreen(
     ) {
         Scaffold(
             containerColor = Color.Transparent,
+            snackbarHost = {
+                SnackbarHost(snackbarHostState) { data ->
+                    Snackbar(
+                        containerColor = TealLight,
+                        contentColor = TextPrimary,
+                        snackbarData = data
+                    )
+                }
+            },
             topBar = {
                 TreinoExecucaoHeader(
                     diaNome = uiState.dia?.dsDia ?: "Treino",
