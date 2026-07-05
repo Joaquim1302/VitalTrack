@@ -8,6 +8,13 @@ object GamificationRules {
     const val POINTS_CALORIE_GOAL_REACHED = 50
     const val POINTS_DAILY_STREAK = 10
     
+    // Novas regras de treino
+    const val POINTS_WORKOUT_STARTED = 5
+    const val POINTS_WORKOUT_COMPLETED = 30
+    const val POINTS_WORKOUT_SERIES_COMPLETED = 2
+    const val POINTS_ALL_PLANNED_EXERCISES_COMPLETED = 20
+    const val POINTS_THREE_WORKOUTS_IN_WEEK = 50
+    
     const val MAX_FOOD_POINTS_PER_DAY = 5
 
     val basicAchievements = listOf(

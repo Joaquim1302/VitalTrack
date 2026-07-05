@@ -67,6 +67,11 @@ fun TreinoExecucaoScreen(
                         // Silencioso se der erro ou permissão
                     }
                 }
+                is TreinoExecucaoEvent.NotificarGamificacao -> {
+                    event.result.snackbarMessage?.let { msg ->
+                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }

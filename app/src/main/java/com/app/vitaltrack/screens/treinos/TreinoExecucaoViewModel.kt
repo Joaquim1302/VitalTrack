@@ -9,20 +9,26 @@ import com.app.vitaltrack.repository.UserPreferencesRepository
 import com.app.vitaltrack.repository.treinos.TreinoAcademiaRepository
 import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
 import com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity
+import com.app.vitaltrack.data.gamification.GamificationRepository
+import com.app.vitaltrack.data.gamification.GamificationEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.temporal.IsoFields
 import java.util.*
 
 sealed class TreinoExecucaoEvent {
     object DescansoConcluido : TreinoExecucaoEvent()
+    data class NotificarGamificacao(val result: com.app.vitaltrack.data.gamification.GamificationResult) : TreinoExecucaoEvent()
 }
 
 class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: TreinoAcademiaRepository
+    private val gamificationRepository: GamificationRepository
     private val userPrefs: UserPreferencesRepository
 
     private val _uiState = MutableStateFlow(TreinoExecucaoUiState())
@@ -38,6 +44,7 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
     init {
         val db = AppDatabase.getDatabase(application)
         repository = TreinoAcademiaRepository(db.treinoAcademiaDao())
+        gamificationRepository = GamificationRepository(application)
         userPrefs = UserPreferencesRepository(application)
         
         userPrefs.userPreferencesFlow
@@ -223,6 +230,20 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
             )
             val novoId = repository.registrarSerieRealizada(serieEntity)
             
+            // Gamificação: Série Concluída
+            val clientId = _uiState.value.cdCliente
+            if (clientId != null) {
+                val gResult = gamificationRepository.registerEvent(
+                    GamificationEvent.WorkoutSeriesCompleted(
+                        clientId = clientId,
+                        cdTreinoSessao = sessao.cdTreinoSessao,
+                        cdSerie = novoId,
+                        date = LocalDate.now().toString()
+                    )
+                )
+                _events.send(TreinoExecucaoEvent.NotificarGamificacao(gResult))
+            }
+
             _uiState.update { state ->
                 val novosExercicios = state.exerciciosExecucao.map { ex ->
                     if (ex.exercicio.cdFichaExercicio == cdFichaExercicio) {
@@ -343,6 +364,36 @@ class TreinoExecucaoViewModel(application: Application) : AndroidViewModel(appli
             if (result != null) {
                 // Atualiza a ficha ativa com os valores da última série de cada exercício
                 repository.atualizarFichaComBaseNaExecucao(cdSessao)
+                
+                // Gamificação: Treino Concluído
+                val clientId = _uiState.value.cdCliente
+                if (clientId != null) {
+                    val today = LocalDate.now()
+                    
+                    // 1. Treino Concluído (30 pts)
+                    val gResult1 = gamificationRepository.registerEvent(
+                        GamificationEvent.WorkoutCompleted(clientId, cdSessao, today.toString())
+                    )
+                    _events.send(TreinoExecucaoEvent.NotificarGamificacao(gResult1))
+
+                    // 2. Todos os exercícios planejados concluídos (20 pts)
+                    if (repository.todosExerciciosPlanejadosConcluidos(cdSessao)) {
+                        val gResult2 = gamificationRepository.registerEvent(
+                            GamificationEvent.AllPlannedExercisesCompleted(clientId, cdSessao, today.toString())
+                        )
+                        _events.send(TreinoExecucaoEvent.NotificarGamificacao(gResult2))
+                    }
+
+                    // 3. Treinar 3x na semana (50 pts)
+                    val completedThisWeek = repository.contarSessoesConcluidasNaSemana(clientId)
+                    if (completedThisWeek >= 3) {
+                        val yearWeek = "${today.year}-W${today.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR)}"
+                        val gResult3 = gamificationRepository.registerEvent(
+                            GamificationEvent.ThreeWorkoutsInWeek(clientId, yearWeek, today.toString())
+                        )
+                        _events.send(TreinoExecucaoEvent.NotificarGamificacao(gResult3))
+                    }
+                }
 
                 timerJob?.cancel()
                 _uiState.update { it.copy(isLoading = false, treinoConcluido = true) }

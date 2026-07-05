@@ -63,6 +63,11 @@ fun TreinoAcademiaScreen(
                 is TreinoAcademiaEvent.IniciarExportacaoMarkdown -> {
                     fileSaverLauncher.launch(event.defaultFileName)
                 }
+                is TreinoAcademiaEvent.NotificarGamificacao -> {
+                    event.result.snackbarMessage?.let { msg ->
+                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
                 is TreinoAcademiaEvent.MostrarMensagemSucesso -> {
                     android.widget.Toast.makeText(context, event.mensagem, android.widget.Toast.LENGTH_SHORT).show()
                 }

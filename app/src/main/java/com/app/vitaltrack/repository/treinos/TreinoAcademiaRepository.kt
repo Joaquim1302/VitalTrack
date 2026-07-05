@@ -77,6 +77,28 @@ class TreinoAcademiaRepository(val dao: TreinoAcademiaDao) {
     suspend fun buscarUltimaSessaoConcluida(cdCliente: Long, cdFichaDia: Long, cdSessaoAtual: Long): TreinoSessaoEntity? =
         dao.buscarUltimaSessaoConcluidaDoMesmoTreino(cdCliente, cdFichaDia, cdSessaoAtual)
 
+    suspend fun contarSessoesConcluidasNaSemana(clientId: Long): Int {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.set(java.util.Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        val start = calendar.time
+        
+        calendar.add(java.util.Calendar.DAY_OF_WEEK, 7)
+        val end = calendar.time
+        
+        return dao.contarSessoesConcluidasNoPeriodo(clientId, start, end)
+    }
+
+    suspend fun todosExerciciosPlanejadosConcluidos(cdTreinoSessao: Long): Boolean {
+        val sessao = dao.buscarSessaoPorId(cdTreinoSessao) ?: return false
+        val planejados = dao.contarExerciciosPlanejados(sessao.cdFichaDia)
+        val concluidos = dao.contarExerciciosComSeriesConcluidas(cdTreinoSessao)
+        return concluidos >= planejados && planejados > 0
+    }
+
     suspend fun atualizarFichaComBaseNaExecucao(cdSessao: Long) {
         val ultimasSeries = dao.buscarUltimasSeriesDaSessao(cdSessao)
         

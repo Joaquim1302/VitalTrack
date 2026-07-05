@@ -52,6 +52,12 @@ interface TreinoAcademiaDao {
     @Query("SELECT * FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_DIA = :cdFichaDia ORDER BY NR_ORDEM")
     suspend fun listarExerciciosPlanejadosSync(cdFichaDia: Long): List<TreinoFichaExercicioEntity>
 
+    @Query("SELECT COUNT(*) FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_DIA = :cdFichaDia")
+    suspend fun contarExerciciosPlanejados(cdFichaDia: Long): Int
+
+    @Query("SELECT COUNT(DISTINCT CD_FICHA_EXERCICIO) FROM tb_DT_treinos_series WHERE CD_TREINO_SESSAO = :cdTreinoSessao AND ST_CONCLUIDA = 1")
+    suspend fun contarExerciciosComSeriesConcluidas(cdTreinoSessao: Long): Int
+
     @Query("SELECT * FROM tb_DT_treinos_fichas_exercicios WHERE CD_FICHA_EXERCICIO = :cdFichaExercicio")
     suspend fun buscarExercicioPlanejado(cdFichaExercicio: Long): TreinoFichaExercicioEntity?
 
@@ -73,6 +79,16 @@ interface TreinoAcademiaDao {
 
     @Query("SELECT * FROM tb_DT_treinos_sessoes WHERE CD_TREINO_SESSAO = :cdSessao")
     suspend fun buscarSessaoPorId(cdSessao: Long): TreinoSessaoEntity?
+
+    @Query("""
+        SELECT COUNT(*) 
+        FROM tb_DT_treinos_sessoes 
+        WHERE CD_CLIENTE = :clientId 
+          AND ST_STATUS = 'CONCLUIDO' 
+          AND (CASE WHEN DT_FIM IS NULL THEN DT_INICIO ELSE DT_FIM END) >= :periodStart 
+          AND (CASE WHEN DT_FIM IS NULL THEN DT_INICIO ELSE DT_FIM END) < :periodEnd
+    """)
+    suspend fun contarSessoesConcluidasNoPeriodo(clientId: Long, periodStart: java.util.Date, periodEnd: java.util.Date): Int
 
     @Query("""
         SELECT * 

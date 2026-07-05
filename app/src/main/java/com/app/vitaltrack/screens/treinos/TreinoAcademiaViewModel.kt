@@ -13,11 +13,14 @@ import com.app.vitaltrack.repository.treinos.TreinoMarkdownRepository
 import com.app.vitaltrack.repository.treinos.TreinoSessaoResult
 import com.app.vitaltrack.data.markdown.MarkdownTreinoParseResult
 import com.app.vitaltrack.data.markdown.TreinoMarkdownExportService
+import com.app.vitaltrack.data.gamification.GamificationRepository
+import com.app.vitaltrack.data.gamification.GamificationEvent
 import android.net.Uri
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 sealed class TreinoAcademiaEvent {
     data class NavegarParaExecucao(val cdSessao: Long) : TreinoAcademiaEvent()
@@ -26,6 +29,7 @@ sealed class TreinoAcademiaEvent {
     data class IniciarExportacaoMarkdown(val defaultFileName: String) : TreinoAcademiaEvent()
     data class MostrarMensagemSucesso(val mensagem: String) : TreinoAcademiaEvent()
     data class MostrarDialogoConflito(val sessao: com.app.vitaltrack.data.entity.treinos.TreinoSessaoEntity) : TreinoAcademiaEvent()
+    data class NotificarGamificacao(val result: com.app.vitaltrack.data.gamification.GamificationResult) : TreinoAcademiaEvent()
 }
 
 data class TreinoAcademiaUiState(
@@ -43,6 +47,7 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
     private val repository: TreinoAcademiaRepository
     private val markdownRepository: TreinoMarkdownRepository
     private val markdownExportService: TreinoMarkdownExportService
+    private val gamificationRepository: GamificationRepository
     private val userPrefs: UserPreferencesRepository
 
     private val _uiState = MutableStateFlow(TreinoAcademiaUiState())
@@ -58,6 +63,7 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
         repository = TreinoAcademiaRepository(db.treinoAcademiaDao())
         markdownRepository = TreinoMarkdownRepository.getInstance(application)
         markdownExportService = TreinoMarkdownExportService(repository)
+        gamificationRepository = GamificationRepository(application)
         userPrefs = UserPreferencesRepository(application)
 
         observeClienteAtivo()
@@ -134,17 +140,25 @@ class TreinoAcademiaViewModel(application: Application) : AndroidViewModel(appli
     }
 
     fun iniciarTreino(cdFichaDia: Long, ignorarConflito: Boolean = false) {
-        val clienteId = _uiState.value.clienteId ?: return
+        val clientId = _uiState.value.clienteId ?: return
 
         viewModelScope.launch {
             val result = if (ignorarConflito) {
-                repository.forcarNovaSessao(clienteId, cdFichaDia)
+                repository.forcarNovaSessao(clientId, cdFichaDia)
             } else {
-                repository.iniciarSessaoTreino(clienteId, cdFichaDia)
+                repository.iniciarSessaoTreino(clientId, cdFichaDia)
             }
 
             when (result) {
                 is TreinoSessaoResult.SessaoCriada -> {
+                    val gamificationResult = gamificationRepository.registerEvent(
+                        GamificationEvent.WorkoutStarted(
+                            clientId = clientId,
+                            cdTreinoSessao = result.sessao.cdTreinoSessao,
+                            date = LocalDate.now().toString()
+                        )
+                    )
+                    _events.send(TreinoAcademiaEvent.NotificarGamificacao(gamificationResult))
                     _events.send(TreinoAcademiaEvent.NavegarParaExecucao(result.sessao.cdTreinoSessao))
                 }
                 is TreinoSessaoResult.SessaoRetomada -> {

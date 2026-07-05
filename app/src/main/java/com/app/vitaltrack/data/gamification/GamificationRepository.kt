@@ -21,6 +21,11 @@ class GamificationRepository(private val context: Context) {
             is GamificationEvent.WorkoutRegistered -> event.clientId
             is GamificationEvent.CalorieGoalReached -> event.clientId
             is GamificationEvent.AppUsedToday -> event.clientId
+            is GamificationEvent.WorkoutStarted -> event.clientId
+            is GamificationEvent.WorkoutCompleted -> event.clientId
+            is GamificationEvent.WorkoutSeriesCompleted -> event.clientId
+            is GamificationEvent.AllPlannedExercisesCompleted -> event.clientId
+            is GamificationEvent.ThreeWorkoutsInWeek -> event.clientId
         }
 
         val date = when (event) {
@@ -30,9 +35,30 @@ class GamificationRepository(private val context: Context) {
             is GamificationEvent.WorkoutRegistered -> event.date
             is GamificationEvent.CalorieGoalReached -> event.date
             is GamificationEvent.AppUsedToday -> event.date
+            is GamificationEvent.WorkoutStarted -> event.date
+            is GamificationEvent.WorkoutCompleted -> event.date
+            is GamificationEvent.WorkoutSeriesCompleted -> event.date
+            is GamificationEvent.AllPlannedExercisesCompleted -> event.date
+            is GamificationEvent.ThreeWorkoutsInWeek -> event.date
+        }
+
+        // Gera chave de idempotência para o evento
+        val eventKey = when (event) {
+            is GamificationEvent.WorkoutStarted -> "workout_started:${event.clientId}:${event.cdTreinoSessao}"
+            is GamificationEvent.WorkoutCompleted -> "workout_completed:${event.clientId}:${event.cdTreinoSessao}"
+            is GamificationEvent.WorkoutSeriesCompleted -> "workout_series_completed:${event.clientId}:${event.cdTreinoSessao}:${event.cdSerie}"
+            is GamificationEvent.AllPlannedExercisesCompleted -> "all_planned_exercises_completed:${event.clientId}:${event.cdTreinoSessao}"
+            is GamificationEvent.ThreeWorkoutsInWeek -> "three_workouts_week:${event.clientId}:${event.yearWeek}"
+            else -> null // Eventos antigos usam DailyState para idempotência
         }
 
         var state = dataStore.getGamificationState(clientId)
+        
+        // Verifica se o evento já foi processado
+        if (eventKey != null && state.processedEventKeys.contains(eventKey)) {
+            return GamificationResult(newTotalPoints = state.totalPoints, newLevel = state.level)
+        }
+
         var dailyState = dataStore.getDailyState(clientId, date)
         
         val messages = mutableListOf<String>()
@@ -82,6 +108,47 @@ class GamificationRepository(private val context: Context) {
             is GamificationEvent.AppUsedToday -> {
                 // Trigger for streak logic only
             }
+            // Novos eventos de musculação
+            is GamificationEvent.WorkoutStarted -> {
+                pointsToAdd += GamificationRules.POINTS_WORKOUT_STARTED
+                messages.add("+${GamificationRules.POINTS_WORKOUT_STARTED} pontos! Treino iniciado.")
+            }
+            is GamificationEvent.WorkoutCompleted -> {
+                pointsToAdd += GamificationRules.POINTS_WORKOUT_COMPLETED
+                messages.add("+${GamificationRules.POINTS_WORKOUT_COMPLETED} pontos! Treino concluído.")
+                // Também conta para o streak/uso diário se ainda não tiver
+                if (!dailyState.workoutRegistered) {
+                    dailyState = dailyState.copy(workoutRegistered = true)
+                }
+            }
+            is GamificationEvent.WorkoutSeriesCompleted -> {
+                pointsToAdd += GamificationRules.POINTS_WORKOUT_SERIES_COMPLETED
+                messages.add("+${GamificationRules.POINTS_WORKOUT_SERIES_COMPLETED} pontos! Série registrada.")
+            }
+            is GamificationEvent.AllPlannedExercisesCompleted -> {
+                pointsToAdd += GamificationRules.POINTS_ALL_PLANNED_EXERCISES_COMPLETED
+                messages.add("+${GamificationRules.POINTS_ALL_PLANNED_EXERCISES_COMPLETED} pontos! Todos os exercícios concluídos.")
+            }
+            is GamificationEvent.ThreeWorkoutsInWeek -> {
+                pointsToAdd += GamificationRules.POINTS_THREE_WORKOUTS_IN_WEEK
+                messages.add("+${GamificationRules.POINTS_THREE_WORKOUTS_IN_WEEK} pontos! 3 treinos na semana!")
+            }
+        }
+
+        // Adiciona a chave de evento processado para garantir idempotência
+        if (eventKey != null) {
+            val updatedProcessedKeys = state.processedEventKeys.toMutableSet()
+            updatedProcessedKeys.add(eventKey)
+            
+            // Limpeza opcional: manter apenas as últimas 500 chaves para evitar crescimento infinito do DataStore
+            if (updatedProcessedKeys.size > 500) {
+                // Remove as chaves mais antigas (estratégia simples: remove 50 aleatórias ou por prefixo)
+                // Aqui removemos apenas se não forem chaves semanais importantes
+                val keysToRemove = updatedProcessedKeys.filter { !it.contains("_week:") }.take(50)
+                updatedProcessedKeys.removeAll(keysToRemove.toSet())
+            }
+            
+            state = state.copy(processedEventKeys = updatedProcessedKeys)
         }
 
         // 2. Update Streak

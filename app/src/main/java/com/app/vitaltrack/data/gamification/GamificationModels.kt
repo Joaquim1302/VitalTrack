@@ -10,7 +10,8 @@ data class GamificationState(
     val bestStreak: Int = 0,
     val lastActiveDate: String? = null,
     val level: Int = 1,
-    val unlockedAchievements: Set<String> = emptySet()
+    val unlockedAchievements: Set<String> = emptySet(),
+    val processedEventKeys: Set<String> = emptySet()
 )
 
 @Serializable
@@ -70,6 +71,37 @@ sealed class GamificationEvent {
 
     data class AppUsedToday(
         val clientId: Long,
+        val date: String
+    ) : GamificationEvent()
+
+    data class WorkoutStarted(
+        val clientId: Long,
+        val cdTreinoSessao: Long,
+        val date: String
+    ) : GamificationEvent()
+
+    data class WorkoutCompleted(
+        val clientId: Long,
+        val cdTreinoSessao: Long,
+        val date: String
+    ) : GamificationEvent()
+
+    data class WorkoutSeriesCompleted(
+        val clientId: Long,
+        val cdTreinoSessao: Long,
+        val cdSerie: Long,
+        val date: String
+    ) : GamificationEvent()
+
+    data class AllPlannedExercisesCompleted(
+        val clientId: Long,
+        val cdTreinoSessao: Long,
+        val date: String
+    ) : GamificationEvent()
+
+    data class ThreeWorkoutsInWeek(
+        val clientId: Long,
+        val yearWeek: String,
         val date: String
     ) : GamificationEvent()
 }
