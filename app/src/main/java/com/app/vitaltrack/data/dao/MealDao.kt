@@ -136,7 +136,10 @@ interface MealDao {
             a.NM_CAL,
             a.NM_PROT,
             a.NM_CARB,
-            a.NM_GORD
+            a.NM_GORD,
+            (SELECT i.NM_QNT FROM tb_DT_refeicoes_itens i 
+             WHERE i.CD_ALIMENTO = a.CD_ALIMENTO 
+             ORDER BY i.DT_CONSUMO DESC, i.CD_REFEICAO_ITEM_APP DESC LIMIT 1) as NM_ULTIMA_QNT
         FROM tb_DT_alimentos a
         LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
         ORDER BY a.DS_ALIMENTO ASC
@@ -154,7 +157,10 @@ interface MealDao {
             a.NM_CAL,
             a.NM_PROT,
             a.NM_CARB,
-            a.NM_GORD
+            a.NM_GORD,
+            (SELECT i.NM_QNT FROM tb_DT_refeicoes_itens i 
+             WHERE i.CD_ALIMENTO = a.CD_ALIMENTO 
+             ORDER BY i.DT_CONSUMO DESC, i.CD_REFEICAO_ITEM_APP DESC LIMIT 1) as NM_ULTIMA_QNT
         FROM tb_DT_alimentos a
         LEFT JOIN tb_DT_unidades u ON u.CD_UNIDADE = a.CD_UNIDADE
         WHERE a.DS_ALIMENTO LIKE '%' || :query || '%'
@@ -233,6 +239,7 @@ data class AlimentoDisponivel(
     @ColumnInfo(name = "NM_PROT") val nmProt: Double?,
     @ColumnInfo(name = "NM_CARB") val nmCarb: Double?,
     @ColumnInfo(name = "NM_GORD") val nmGord: Double?,
+    @ColumnInfo(name = "NM_ULTIMA_QNT") val nmUltimaQnt: Double? = null,
     @Ignore val dsNormalized: String = ""
 ) {
     // Construtor para Room (sem @Ignore)
@@ -245,8 +252,9 @@ data class AlimentoDisponivel(
         nmCal: Double?,
         nmProt: Double?,
         nmCarb: Double?,
-        nmGord: Double?
-    ) : this(cdAlimento, dsAlimento, cdUnidade, dsUnidade, nmQntBase, nmCal, nmProt, nmCarb, nmGord, "")
+        nmGord: Double?,
+        nmUltimaQnt: Double?
+    ) : this(cdAlimento, dsAlimento, cdUnidade, dsUnidade, nmQntBase, nmCal, nmProt, nmCarb, nmGord, nmUltimaQnt, "")
 }
 
 data class RecentFood(

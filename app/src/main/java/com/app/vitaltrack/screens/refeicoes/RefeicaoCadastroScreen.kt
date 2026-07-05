@@ -380,6 +380,7 @@ fun RefeicaoCadastroScreen(
                 baseCarb = alimento.nmCarb ?: 0.0,
                 baseGord = alimento.nmGord ?: 0.0,
                 baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
+                initialQuantity = alimento.nmUltimaQnt ?: alimento.nmQntBase?.toDouble() ?: 100.0,
                 onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
