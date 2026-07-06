@@ -124,47 +124,68 @@ Funcionalidades:
 * Uso do Storage Access Framework do Android para escolha da pasta de destino
 
 ---
+
 ## Capturas de Tela
 
-### Dashboard
-
-Tela inicial com resumo diário, meta calórica, refeições do dia e acesso rápido ao perfil do cliente.
-
-<p align="center">
-  <img src="docs/images/dashboard.jpg" width="250" alt="Dashboard do VitalTrack">
-</p>
+<table>
+  <tr>
+    <th>Dashboard</th>
+    <th>Cadastro de Refeição</th>
+    <th>Refeições Salvas</th>
+    <th>Perfil do Cliente</th>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="docs/images/dashboard.jpg" width="200" alt="Dashboard do VitalTrack">
+      <br>
+      <sub>Tela inicial com resumo diário, meta calórica, refeições do dia e acesso rápido ao perfil do cliente.</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/cadastro_refeicao_selecionados.jpg" width="200" alt="Cadastro de refeição no VitalTrack">
+      <br>
+      <sub>Fluxo inteligente para adicionar alimentos à refeição.</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/refeicoes_salvas.jpg" width="200" alt="Refeições salvas no VitalTrack">
+      <br>
+      <sub>Permite reutilizar modelos completos de refeições.</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/perfil_cliente.jpg" width="200" alt="Perfil do cliente no VitalTrack">
+      <br>
+      <sub>Seleção do cliente ativo e definição da meta calórica diária.</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
-### Cadastro de Refeição
+## Fluxo de Cadastro de Refeição
 
-Fluxo inteligente para adicionar alimentos à refeição, com abas para itens selecionados, alimentos recentes, mais consumidos, busca global e refeições salvas.
-
-<p align="center">
-  <img src="docs/images/cadastro_refeicao_selecionados.jpg" width="220" alt="Alimentos selecionados">
-  <img src="docs/images/cadastro_refeicao_recentes.jpg" width="220" alt="Consumidos recentemente">
-  <img src="docs/images/cadastro_refeicao_mais_consumidos.jpg" width="220" alt="Alimentos mais consumidos">
-</p>
-
----
-
-### Refeições Salvas
-
-Permite reutilizar modelos completos de refeições, reduzindo o tempo de cadastro alimentar.
-
-<p align="center">
-  <img src="docs/images/refeicoes_salvas.jpg" width="250" alt="Refeições salvas no VitalTrack">
-</p>
-
----
-
-### Perfil do Cliente
-
-Tela para seleção do cliente ativo e definição da meta calórica diária.
-
-<p align="center">
-  <img src="docs/images/perfil_cliente.jpg" width="250" alt="Perfil do cliente no VitalTrack">
-</p>
+<table>
+  <tr>
+    <th>Selecionados</th>
+    <th>Recentes</th>
+    <th>Mais Consumidos</th>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/images/cadastro_refeicao_selecionados.jpg" width="220" alt="Alimentos selecionados">
+      <br>
+      <sub>Itens adicionados à refeição atual.</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/images/cadastro_refeicao_recentes.jpg" width="220" alt="Consumidos recentemente">
+      <br>
+      <sub>Alimentos consumidos recentemente.</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/images/cadastro_refeicao_mais_consumidos.jpg" width="220" alt="Alimentos mais consumidos">
+      <br>
+      <sub>Alimentos mais usados pelo cliente.</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
