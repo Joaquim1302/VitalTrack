@@ -132,7 +132,11 @@ fun TreinoExecucaoScreen(
                         inicio = uiState.horarioInicioFormatado,
                         duracao = uiState.duracaoFormatada,
                         progresso = uiState.progresso,
-                        seriesStatus = "${uiState.seriesConcluidas} de ${uiState.totalSeries} séries"
+                        seriesStatus = "${uiState.seriesConcluidas} de ${uiState.totalSeries} séries",
+                        intervaloProgresso = if (uiState.restTotalSeconds > 0) 
+                            (uiState.restTotalSeconds - uiState.restRemainingSeconds) / uiState.restTotalSeconds.toFloat() 
+                            else 0f,
+                        exibirIntervalo = uiState.isRestTimerRunning
                     )
 
                     LazyColumn(
@@ -273,60 +277,218 @@ fun TreinoExecucaoHeader(
 
 @Composable
 fun TreinoSessaoStatusCard(
+    // Horário de início da sessão de treino
     inicio: String,
+
+    // Duração atual do treino, geralmente calculada em tempo real
     duracao: String,
+
+    // Valor do progresso da sessão.
+    // Deve estar entre 0f e 1f.
+    // Exemplo: 0.5f representa 50% de progresso.
     progresso: Float,
-    seriesStatus: String
+
+    // Texto exibido no card indicando o status das séries.
+    // Exemplo: "0 de 27 séries"
+    seriesStatus: String,
+
+    // Progresso do intervalo de descanso (0f a 1f)
+    intervaloProgresso: Float = 0f,
+
+    // Define se a barra de intervalo deve ser exibida
+    exibirIntervalo: Boolean = false
 ) {
+    // Card principal que agrupa as informações da sessão
     Card(
         modifier = Modifier
+            // Ocupa toda a largura disponível
             .fillMaxWidth()
+
+            // Aplica margem horizontal externa ao card
             .padding(horizontal = 20.dp),
+
+        // Define a cor de fundo do card
         colors = CardDefaults.cardColors(containerColor = CardBackground),
+
+        // Define cantos arredondados
         shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder)
+
+        // Define a borda do card
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = CardBorder
+        )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        // Coluna principal interna do card.
+        // Organiza o conteúdo verticalmente:
+        // 1. linha com início, duração e progresso
+        // 2. barra de progresso
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Linha horizontal com os três blocos de informação
             Row(
                 modifier = Modifier.fillMaxWidth(),
+
+                // Distribui os elementos com espaço entre eles
                 horizontalArrangement = Arrangement.SpaceBetween,
+
+                // Centraliza verticalmente os itens da linha
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Início", color = TextSecondary, fontSize = 12.sp)
-                    Text(inicio, color = TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                // Bloco 1: horário de início do treino
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Título do campo
+                    Text(
+                        text = "Início",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+
+                    // Valor do horário de início
+                    Text(
+                        text = inicio,
+                        color = TextPrimary,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
-                
-                VerticalDivider(modifier = Modifier.height(30.dp), thickness = 1.dp, color = CardBorder)
-                
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Timer, contentDescription = null, tint = TealLight, modifier = Modifier.size(14.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text("Duração", color = TextSecondary, fontSize = 12.sp)
+
+                // Divisor vertical entre "Início" e "Duração"
+                VerticalDivider(
+                    modifier = Modifier.height(30.dp),
+                    thickness = 1.dp,
+                    color = CardBorder
+                )
+
+                // Bloco 2: duração do treino
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Linha com ícone de cronômetro e texto "Duração"
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Ícone de cronômetro
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = null,
+                            tint = TealLight,
+                            modifier = Modifier.size(14.dp)
+                        )
+
+                        // Espaço entre o ícone e o texto
+                        Spacer(
+                            modifier = Modifier.width(4.dp)
+                        )
+
+                        // Título do campo
+                        Text(
+                            text = "Duração",
+                            color = TextSecondary,
+                            fontSize = 12.sp
+                        )
                     }
-                    Text(duracao, color = TealLight, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+
+                    // Valor da duração do treino
+                    Text(
+                        text = duracao,
+                        color = TealLight,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
-                VerticalDivider(modifier = Modifier.height(30.dp), thickness = 1.dp, color = CardBorder)
+                // Divisor vertical entre "Duração" e "Progresso"
+                VerticalDivider(
+                    modifier = Modifier.height(30.dp),
+                    thickness = 1.dp,
+                    color = CardBorder
+                )
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Progresso", color = TextSecondary, fontSize = 12.sp)
-                    Text(seriesStatus, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                // Bloco 3: progresso das séries
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Título do campo
+                    Text(
+                        text = "Progresso",
+                        color = TextSecondary,
+                        fontSize = 12.sp
+                    )
+
+                    // Texto com o número de séries concluídas em relação ao total
+                    Text(
+                        text = seriesStatus,
+                        color = TextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Espaço entre a linha de informações e a barra de progresso
+            Spacer(
+                modifier = Modifier.height(16.dp)
+            )
 
+            // Barra de progresso inferior do card
             LinearProgressIndicator(
+                // Progresso atual.
+                // O valor esperado é de 0f a 1f.
                 progress = { progresso },
+
                 modifier = Modifier
+                    // Ocupa toda a largura do card
                     .fillMaxWidth()
+
+                    // Define a altura da barra
                     .height(8.dp)
+
+                    // Deixa a barra com extremidades arredondadas
                     .clip(CircleShape),
+
+                // Cor da parte preenchida da barra
                 color = TealLight,
+
+                // Cor do trilho/fundo da barra
                 trackColor = CardBorder
             )
+
+            // Exibe a barra de intervalo apenas quando o descanso está ativo
+            if (exibirIntervalo) {
+                // Espaço entre a barra de progresso e a barra de intervalo
+                Spacer(
+                    modifier = Modifier.height(16.dp)
+                )
+
+                // Barra de intervalo inferior do card (LinearIntervalIndicator)
+                LinearProgressIndicator(
+                    // Intervalo atual.
+                    // O valor esperado é de 0f a 1f.
+                    progress = { intervaloProgresso },
+
+                    modifier = Modifier
+                        // Ocupa toda a largura do card
+                        .fillMaxWidth()
+
+                        // Define a altura da barra
+                        .height(8.dp)
+
+                        // Deixa a barra com extremidades arredondadas
+                        .clip(CircleShape),
+
+                    // Cor da parte preenchida da barra (usando GreenLight para diferenciar)
+                    color = GreenLight,
+
+                    // Cor do trilho/fundo da barra
+                    trackColor = CardBorder
+                )
+            }
+
+
         }
     }
 }

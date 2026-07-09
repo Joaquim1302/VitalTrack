@@ -64,12 +64,12 @@ fun RestTimerComponent(
             Text(
                 text = formatRestTime(remainingSeconds),
                 color = TealLight,
-                fontSize = 56.sp,
+                fontSize = 40.sp,
                 fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -80,7 +80,7 @@ fun RestTimerComponent(
                     onClick = onSkip,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp),
+                        .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color.White.copy(alpha = 0.7f)
                     ),
@@ -101,7 +101,7 @@ fun RestTimerComponent(
                     onClick = onAddThirtySeconds,
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp),
+                        .height(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = TealLight),
                     shape = RoundedCornerShape(14.dp)
                 ) {
