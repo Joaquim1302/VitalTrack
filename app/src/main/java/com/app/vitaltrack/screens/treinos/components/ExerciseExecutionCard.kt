@@ -57,12 +57,13 @@ fun ExerciseExecutionCard(
                         fontWeight = FontWeight.Bold
                     )
                     
-                    val cargaPlanejada = execucao.exercicio.nmCargaRecomendada?.let { " • Carga: ${it.toInt()}kg" } ?: ""
+                    val cargaPlanejada = execucao.exercicio.nmCargaRecomendada?.let { " • ${it.toInt()}kg" } ?: ""
                     
                     Text(
-                        text = "Planejado: ${execucao.exercicio.nrSeriesPlanejadas} x $repsText$cargaPlanejada • Descanso: ${execucao.exercicio.nrDescansoSegundos ?: "padrão"}s",
+                        text = "${execucao.exercicio.nrSeriesPlanejadas} x $repsText$cargaPlanejada / ${execucao.exercicio.nrDescansoSegundos ?: "padrão"}s",
                         color = TextSecondary,
-                        fontSize = 12.sp
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
