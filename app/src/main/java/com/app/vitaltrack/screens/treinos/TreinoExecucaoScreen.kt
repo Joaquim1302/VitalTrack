@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -171,12 +172,31 @@ fun TreinoExecucaoScreen(
                     .clickable { viewModel.hideRestTimer() }, // Permite fechar ao tocar fora se o timer acabou
                 contentAlignment = Alignment.Center
             ) {
+                /*
                 com.app.vitaltrack.screens.treinos.components.RestTimerComponent(
                     remainingSeconds = uiState.restRemainingSeconds,
                     isRunning = uiState.isRestTimerRunning,
                     onSkip = { viewModel.skipRestTimer() },
                     onAddThirtySeconds = { viewModel.addThirtySecondsToRestTimer() }
                 )
+                */
+
+                // Mensagem informativa do descanso iniciado
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 40.dp)
+                        .background(BackgroundDark.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Descanso de ${uiState.restTotalSeconds} segundos iniciado.",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
 
                 if (uiState.restFinished) {
                     Box(
