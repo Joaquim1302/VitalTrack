@@ -389,6 +389,7 @@ fun RefeicaoCadastroScreen(
                 baseGord = alimento.nmGord ?: 0.0,
                 baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
                 initialQuantity = alimento.nmUltimaQnt ?: alimento.nmQntBase?.toDouble() ?: 100.0,
+                initialUnit = alimento.dsUnidade,
                 onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
@@ -404,7 +405,7 @@ fun RefeicaoCadastroScreen(
                 baseGord = alimento.nmGord ?: 0.0,
                 baseQuantity = alimento.nmQntBase?.toDouble() ?: 100.0,
                 initialQuantity = alimento.nmQnt ?: 100.0,
-                initialUnit = alimento.dsUnidade ?: "g",
+                initialUnit = alimento.dsUnidade,
                 onSalvar = { qty, unit -> viewModel.addItem(alimento.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
@@ -420,7 +421,7 @@ fun RefeicaoCadastroScreen(
                 baseGord = food.nmGord ?: 0.0,
                 baseQuantity = food.nmQntBase?.toDouble() ?: 100.0,
                 initialQuantity = food.nmQntBase?.toDouble() ?: 100.0,
-                initialUnit = food.dsUnidade ?: "g",
+                initialUnit = food.dsUnidade,
                 onSalvar = { qty, unit -> viewModel.addItem(food.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarAdicaoAlimento() }
             )
@@ -436,7 +437,7 @@ fun RefeicaoCadastroScreen(
                 baseGord = item.nmGord ?: 0.0,
                 baseQuantity = item.nmQntBase?.toDouble() ?: 100.0,
                 initialQuantity = item.nmQnt ?: 100.0,
-                initialUnit = item.dsUnidade ?: "g",
+                initialUnit = item.dsUnidade,
                 onSalvar = { qty, unit -> viewModel.updateItem(item.cdAlimento, qty, unit) },
                 onCancelar = { viewModel.cancelarEdicaoAlimento() }
             )
@@ -567,6 +568,8 @@ fun CurrentItemRow(
         String.format(Locale.forLanguageTag("pt-BR"), "%.2f", qnt)
     }
 
+    val formattedUnit = item.dsUnidade?.trim()?.takeIf { it.isNotEmpty() } ?: "un."
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -581,7 +584,7 @@ fun CurrentItemRow(
                     append(item.dsAlimento ?: "Alimento desconhecido")
                     append(" ")
                     withStyle(style = SpanStyle(color = TextSecondary, fontWeight = FontWeight.Bold)) {
-                        append(" • [$formattedQnt] • ${calorias.toInt()} kcal")
+                        append(" • [$formattedQnt $formattedUnit] • ${calorias.toInt()} kcal")
                     }
                 },
                 color = TextPrimary,
@@ -630,7 +633,7 @@ fun MostUsedFoodCard(
                 )
 
                 Text(
-                    text = "${food.nmCal?.toInt() ?: 0} kcal / ${food.nmQntBase ?: 100} ${food.dsUnidade ?: ""}",
+                    text = "${food.nmCal?.toInt() ?: 0} kcal / ${food.nmQntBase ?: 100} ${food.dsUnidade?.trim()?.takeIf { it.isNotEmpty() } ?: "un."}",
                     color = TextSecondary,
                     fontSize = 13.sp
                 )
@@ -680,7 +683,7 @@ fun AlimentoRecentCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "${alimento.nmQnt?.toInt() ?: 0} ${alimento.dsUnidade ?: ""}  •  ${alimento.nmCal?.toInt() ?: 0} kcal",
+                        text = "${alimento.nmQnt?.toInt() ?: 0} ${alimento.dsUnidade?.trim()?.takeIf { it.isNotEmpty() } ?: "un."}  •  ${alimento.nmCal?.toInt() ?: 0} kcal",
                         color = TextSecondary,
                         fontSize = 13.sp
                     )
@@ -760,8 +763,9 @@ fun AlimentoDisponivelCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val unit = alimento.dsUnidade?.trim()?.takeIf { it.isNotEmpty() } ?: "un."
                     val infoNutricional = listOfNotNull(
-                        alimento.nmCal?.let { "${it.toInt()} kcal" }
+                        alimento.nmCal?.let { "${it.toInt()} kcal / ${alimento.nmQntBase ?: 100} $unit" }
                     ).joinToString("  •  ")
 
                     Text(

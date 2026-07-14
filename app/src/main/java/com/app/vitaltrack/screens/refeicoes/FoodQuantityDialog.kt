@@ -21,10 +21,12 @@ fun FoodQuantityDialog(
     baseGord: Double,
     baseQuantity: Double,
     initialQuantity: Double = 100.0,
-    initialUnit: String = "g",
+    initialUnit: String? = null,
     onSalvar: (Double, String) -> Unit,
     onCancelar: () -> Unit
 ) {
+    val displayUnit = initialUnit?.trim()?.takeIf { it.isNotEmpty() } ?: "un."
+
     var quantityText by remember { 
         mutableStateOf(
             if (initialQuantity == 0.0) "" 
@@ -78,7 +80,7 @@ fun FoodQuantityDialog(
                         }
                     },
                     label = { Text("Quantidade") },
-                    suffix = { Text(initialUnit) },
+                    suffix = { Text(displayUnit) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
@@ -94,7 +96,7 @@ fun FoodQuantityDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onSalvar(quantity, initialUnit) },
+                onClick = { onSalvar(quantity, displayUnit) },
                 enabled = quantity > 0
             ) {
                 Text("Salvar", color = TealLight, fontWeight = FontWeight.Bold)
